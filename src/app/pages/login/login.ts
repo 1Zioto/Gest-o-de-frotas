@@ -134,6 +134,13 @@ export class LoginComponent {
   }
 
   onLogin() {
+    // Autofill fallback: browser autofill fires 'change' not 'input',
+    // so [(ngModel)] may not sync — read DOM values directly as fallback.
+    const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
+    const passwordInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+    if (!this.email && emailInput?.value) this.email = emailInput.value;
+    if (!this.password && passwordInput?.value) this.password = passwordInput.value;
+
     if (!this.email || !this.password) {
       this.error.set('Preencha e-mail e senha.');
       return;
