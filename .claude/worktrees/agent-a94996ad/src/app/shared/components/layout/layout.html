@@ -1,0 +1,116 @@
+<div class="app-shell" [class.sidebar-open]="sidebarOpen()" [class.sidebar-closed]="!sidebarOpen()">
+
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" *ngIf="isMobile() && sidebarOpen()" (click)="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div class="brand" *ngIf="sidebarOpen()">
+        <div class="brand-icon">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">GestFrota</span>
+          <span class="brand-sub">5.0</span>
+        </div>
+      </div>
+      <div class="brand-collapsed" *ngIf="!sidebarOpen()">
+        <mat-icon>local_shipping</mat-icon>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <div class="nav-group" *ngFor="let group of navGroups">
+
+        <!-- Group Header (only show label when sidebar open) -->
+        <div class="nav-group-header" (click)="toggleGroup(group.label)" [matTooltip]="!sidebarOpen() ? group.label : ''" matTooltipPosition="right">
+          <div class="nav-group-header-inner">
+            <mat-icon class="group-icon">{{ group.icon }}</mat-icon>
+            <span class="group-label" *ngIf="sidebarOpen()">{{ group.label }}</span>
+          </div>
+          <mat-icon class="chevron" *ngIf="sidebarOpen()" [class.rotated]="isGroupExpanded(group.label)">
+            expand_more
+          </mat-icon>
+        </div>
+
+        <!-- Group Items -->
+        <div class="nav-group-items" [class.expanded]="isGroupExpanded(group.label) || !sidebarOpen()">
+          <a
+            *ngFor="let item of group.items"
+            class="nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            (click)="closeSidebarOnMobile()"
+            [matTooltip]="!sidebarOpen() ? item.label : ''"
+            matTooltipPosition="right"
+            matRipple
+          >
+            <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+            <span class="nav-label" *ngIf="sidebarOpen()">{{ item.label }}</span>
+          </a>
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- User area -->
+    <div class="sidebar-footer" *ngIf="sidebarOpen()">
+      <div class="user-info">
+        <div class="user-avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ user?.nome || 'Usuário' }}</span>
+          <span class="user-role">{{ user?.role || 'Admin' }}</span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()" matTooltip="Sair" matRipple>
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+
+    <div class="sidebar-footer-collapsed" *ngIf="!sidebarOpen()">
+      <button class="logout-btn-sm" (click)="logout()" matTooltip="Sair" matTooltipPosition="right" matRipple>
+        <mat-icon>logout</mat-icon>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- Main content -->
+  <div class="main-wrapper">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="menu-toggle" (click)="toggleSidebar()" matRipple aria-label="Toggle sidebar">
+        <span class="hamburger" [class.active]="sidebarOpen()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="topbar-actions">
+        <button class="topbar-btn" matRipple matTooltip="Notificações">
+          <mat-icon>notifications_none</mat-icon>
+        </button>
+        <button class="topbar-btn" matRipple matTooltip="Perfil">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+
+</div>

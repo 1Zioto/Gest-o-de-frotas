@@ -1,0 +1,22 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Angular build
+dist/
+.angular/
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

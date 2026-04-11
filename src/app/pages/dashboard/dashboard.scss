@@ -1,0 +1,215 @@
+.dashboard { max-width: 1400px; margin: 0 auto; }
+
+.dash-header {
+  margin-bottom: 28px;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+
+    .header-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        color: white;
+        font-size: 22px;
+        height: 22px;
+        width: 22px;
+      }
+    }
+  }
+
+  p {
+    margin: 6px 0 0 50px;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+.top-loader { margin-bottom: 20px; border-radius: 4px; }
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  cursor: pointer;
+  border: 1px solid #e2e8f0 !important;
+  border-top: 3px solid !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  background: white !important;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.1) !important;
+  }
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px !important;
+  }
+
+  .stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 26px;
+      height: 26px;
+      width: 26px;
+    }
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+mat-card-header {
+  padding: 20px 20px 12px !important;
+
+  .spacer { flex: 1; }
+
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      font-size: 20px;
+      color: #6366f1;
+    }
+  }
+
+  mat-card-title {
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+  }
+
+  a[mat-button] {
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: #6366f1 !important;
+  }
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+
+  .activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+    }
+
+    &.fuel { background: #dcfce7; color: #16a34a; }
+    &.maintenance { background: #ede9fe; color: #7c3aed; }
+  }
+
+  .activity-info {
+    flex: 1;
+    min-width: 0;
+
+    strong { font-weight: 700; font-size: 0.875rem; color: #0f172a; }
+
+    .activity-sub {
+      font-size: 0.775rem;
+      color: #94a3b8;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .activity-date {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    font-weight: 600;
+    white-space: nowrap;
+    background: #f8fafc;
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+mat-divider { border-color: #f1f5f9 !important; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #cbd5e1;
+
+  mat-icon {
+    font-size: 40px;
+    height: 40px;
+    width: 40px;
+    display: block;
+    margin: 0 auto 10px;
+  }
+
+  p { font-size: 0.875rem; font-weight: 500; margin: 0; }
+}

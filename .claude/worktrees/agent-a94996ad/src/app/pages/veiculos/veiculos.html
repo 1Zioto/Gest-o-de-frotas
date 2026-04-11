@@ -1,0 +1,76 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1><mat-icon>directions_car</mat-icon> Veículos</h1>
+      <p>Gerencie a frota de veículos</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openForm()">
+      <mat-icon>add</mat-icon> Novo Veículo
+    </button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div class="search-bar">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar veículo</mat-label>
+          <input matInput [(ngModel)]="search" (keyup.enter)="load()" placeholder="Placa, marca ou modelo">
+          <mat-icon matSuffix (click)="load()" style="cursor:pointer">search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      <div class="table-responsive">
+        <table mat-table [dataSource]="veiculos()">
+          <ng-container matColumnDef="placa">
+            <th mat-header-cell *matHeaderCellDef>Placa</th>
+            <td mat-cell *matCellDef="let v"><strong class="placa-badge">{{ v.placa }}</strong></td>
+          </ng-container>
+          <ng-container matColumnDef="marca">
+            <th mat-header-cell *matHeaderCellDef>Marca</th>
+            <td mat-cell *matCellDef="let v">{{ v.marca }}</td>
+          </ng-container>
+          <ng-container matColumnDef="modelo">
+            <th mat-header-cell *matHeaderCellDef>Modelo</th>
+            <td mat-cell *matCellDef="let v">{{ v.modelo }}</td>
+          </ng-container>
+          <ng-container matColumnDef="ano">
+            <th mat-header-cell *matHeaderCellDef>Ano</th>
+            <td mat-cell *matCellDef="let v">{{ v.ano }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tipo_combustivel">
+            <th mat-header-cell *matHeaderCellDef>Combustível</th>
+            <td mat-cell *matCellDef="let v"><mat-chip>{{ v.tipo_combustivel }}</mat-chip></td>
+          </ng-container>
+          <ng-container matColumnDef="proprietario_nome">
+            <th mat-header-cell *matHeaderCellDef>Proprietário</th>
+            <td mat-cell *matCellDef="let v">{{ v.proprietario_nome }}</td>
+          </ng-container>
+          <ng-container matColumnDef="ativo">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let v">
+              <mat-chip [color]="v.ativo ? 'primary' : 'warn'" selected>{{ v.ativo ? 'Ativo' : 'Inativo' }}</mat-chip>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let v">
+              <button mat-icon-button color="primary" matTooltip="Editar" (click)="openForm(v)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button color="warn" matTooltip="Desativar" (click)="delete(v)"><mat-icon>block</mat-icon></button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              <mat-icon>directions_car_off</mat-icon> Nenhum veículo encontrado
+            </td>
+          </tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,91 @@
+<div class="dashboard">
+  <div class="dash-header">
+    <h1>
+      <div class="header-icon"><mat-icon>dashboard</mat-icon></div>
+      Dashboard
+    </h1>
+    <p>Visão geral do sistema de gestão de frotas</p>
+  </div>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" class="top-loader"></mat-progress-bar>
+  }
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    @for (card of statCards; track card.key) {
+      <mat-card class="stat-card" [routerLink]="card.route" [style.border-top-color]="card.color">
+        <mat-card-content>
+          <div class="stat-icon" [style.background-color]="card.color + '18'" [style.color]="card.color">
+            <mat-icon>{{ card.icon }}</mat-icon>
+          </div>
+          <div class="stat-info">
+            <div class="stat-value">
+              @if (card.currency) {
+                {{ getStat(card.key) | currency:'BRL':'symbol':'1.2-2' }}
+              } @else {
+                {{ getStat(card.key) }}
+              }
+            </div>
+            <div class="stat-label">{{ card.label }}</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="activity-grid">
+    <!-- Últimos Abastecimentos -->
+    <mat-card>
+      <mat-card-header>
+        <div class="section-icon" mat-card-avatar><mat-icon>local_gas_station</mat-icon></div>
+        <mat-card-title>Últimos Abastecimentos</mat-card-title>
+        <span class="spacer"></span>
+        <a mat-button color="primary" routerLink="/abastecimentos">Ver todos</a>
+      </mat-card-header>
+      <mat-card-content>
+        @if (ultimosAbastecimentos().length === 0 && !loading()) {
+          <div class="empty-state"><mat-icon>local_gas_station</mat-icon><p>Nenhum registro</p></div>
+        }
+        @for (a of ultimosAbastecimentos(); track a.id_abastecimento) {
+          <div class="activity-item">
+            <div class="activity-icon fuel"><mat-icon>local_gas_station</mat-icon></div>
+            <div class="activity-info">
+              <strong>{{ a.placa }}</strong> — {{ a.motorista_nome }}
+              <div class="activity-sub">{{ a.tipo_combustivel }} · {{ a.litros }}L · {{ a.valor_total | currency:'BRL':'symbol':'1.2-2' }}</div>
+            </div>
+            <div class="activity-date">{{ a.data | date:'dd/MM' }}</div>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Últimas Manutenções -->
+    <mat-card>
+      <mat-card-header>
+        <div class="section-icon" mat-card-avatar><mat-icon>build</mat-icon></div>
+        <mat-card-title>Últimas Manutenções</mat-card-title>
+        <span class="spacer"></span>
+        <a mat-button color="primary" routerLink="/manutencoes">Ver todas</a>
+      </mat-card-header>
+      <mat-card-content>
+        @if (ultimasManutencoes().length === 0 && !loading()) {
+          <div class="empty-state"><mat-icon>build</mat-icon><p>Nenhum registro</p></div>
+        }
+        @for (m of ultimasManutencoes(); track m.id_manutencao) {
+          <div class="activity-item">
+            <div class="activity-icon maintenance"><mat-icon>build</mat-icon></div>
+            <div class="activity-info">
+              <strong>{{ m.placa }}</strong> — {{ m.descricao_servico }}
+              <div class="activity-sub">{{ m.tipo_manutencao }} · {{ m.custo_total | currency:'BRL':'symbol':'1.2-2' }}</div>
+            </div>
+            <div class="activity-date">{{ m.data_manutencao | date:'dd/MM' }}</div>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

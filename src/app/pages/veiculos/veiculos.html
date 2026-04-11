@@ -1,0 +1,188 @@
+<div class="page-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-icon">
+        <mat-icon>directions_car</mat-icon>
+      </div>
+      <div>
+        <h1>Veículos</h1>
+        <p>Gerencie a frota de veículos cadastrados</p>
+      </div>
+    </div>
+    <button mat-raised-button class="btn-novo" (click)="openForm()">
+      <mat-icon>add</mat-icon> Novo Veículo
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-row">
+    <div class="stat-card total">
+      <div class="stat-icon"><mat-icon>directions_car</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ veiculos().length }}</span>
+        <span class="stat-label">Total de Veículos</span>
+      </div>
+    </div>
+    <div class="stat-card ativos">
+      <div class="stat-icon"><mat-icon>check_circle</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalAtivos }}</span>
+        <span class="stat-label">Ativos</span>
+      </div>
+    </div>
+    <div class="stat-card inativos">
+      <div class="stat-icon"><mat-icon>cancel</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalInativos }}</span>
+        <span class="stat-label">Inativos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <mat-card>
+    <mat-card-content>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Buscar veículo...</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="search" (keyup.enter)="load()" placeholder="Placa, marca, modelo...">
+          <button *ngIf="search" matSuffix mat-icon-button (click)="search=''; load()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="filtroStatus" (selectionChange)="load()">
+            <mat-option value="todos">Todos</mat-option>
+            <mat-option value="true">Ativos</mat-option>
+            <mat-option value="false">Inativos</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button class="btn-refresh" (click)="load()" matTooltip="Atualizar">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" class="loading-bar"></mat-progress-bar>
+      }
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table mat-table [dataSource]="veiculos()" class="veiculos-table">
+
+          <!-- Placa -->
+          <ng-container matColumnDef="placa">
+            <th mat-header-cell *matHeaderCellDef>Placa</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="placa-badge">{{ v.placa }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Marca/Modelo -->
+          <ng-container matColumnDef="marca_modelo">
+            <th mat-header-cell *matHeaderCellDef>Veículo</th>
+            <td mat-cell *matCellDef="let v">
+              <div class="veiculo-info">
+                <span class="marca">{{ v.marca || '—' }}</span>
+                <span class="modelo">{{ v.modelo || '' }}</span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Ano -->
+          <ng-container matColumnDef="ano">
+            <th mat-header-cell *matHeaderCellDef>Ano</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="ano-text">{{ v.ano || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Combustível -->
+          <ng-container matColumnDef="combustivel">
+            <th mat-header-cell *matHeaderCellDef>Combustível</th>
+            <td mat-cell *matCellDef="let v">
+              @if (v.tipo_combustivel) {
+                <span class="combustivel-chip"
+                  [style.color]="combustivelColor(v.tipo_combustivel)"
+                  [style.background]="combustivelBg(v.tipo_combustivel)">
+                  {{ v.tipo_combustivel }}
+                </span>
+              } @else {
+                <span class="empty-text">—</span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Proprietário -->
+          <ng-container matColumnDef="proprietario_nome">
+            <th mat-header-cell *matHeaderCellDef>Proprietário</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="proprietario-text">{{ v.proprietario_nome || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Odômetro -->
+          <ng-container matColumnDef="odometro">
+            <th mat-header-cell *matHeaderCellDef>Odômetro</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="odometro-text">{{ formatOdometro(v.odometro) }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Status -->
+          <ng-container matColumnDef="ativo">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let v">
+              <span class="status-badge" [class.ativo]="v.ativo" [class.inativo]="!v.ativo">
+                <span class="status-dot"></span>
+                {{ v.ativo ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Ações -->
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let v">
+              <div class="acoes">
+                <button mat-icon-button matTooltip="Editar" class="btn-edit" (click)="openForm(v)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button [matTooltip]="v.ativo ? 'Desativar' : 'Ativar'"
+                  [class.btn-desativar]="v.ativo" [class.btn-ativar]="!v.ativo"
+                  (click)="toggleAtivo(v)">
+                  <mat-icon>{{ v.ativo ? 'block' : 'check_circle' }}</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="displayedColumns.length">
+              <div class="empty-state">
+                <mat-icon>directions_car_off</mat-icon>
+                <p>Nenhum veículo encontrado</p>
+                <button mat-stroked-button (click)="openForm()">
+                  <mat-icon>add</mat-icon> Cadastrar Veículo
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+    </mat-card-content>
+  </mat-card>
+
+</div>

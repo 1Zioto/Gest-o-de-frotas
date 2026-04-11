@@ -1,0 +1,57 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1><mat-icon>business</mat-icon> Proprietários / Clientes</h1>
+      <p>Cadastro de proprietários e clientes</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openForm()"><mat-icon>add</mat-icon> Novo Proprietário</button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      @if (loading()) { <mat-progress-bar mode="indeterminate"></mat-progress-bar> }
+      <div class="table-responsive">
+        <table mat-table [dataSource]="proprietarios()">
+          <ng-container matColumnDef="nome">
+            <th mat-header-cell *matHeaderCellDef>Nome</th>
+            <td mat-cell *matCellDef="let p"><strong>{{ p.nome }}</strong></td>
+          </ng-container>
+          <ng-container matColumnDef="cpf_cnpj">
+            <th mat-header-cell *matHeaderCellDef>CPF/CNPJ</th>
+            <td mat-cell *matCellDef="let p">{{ p.cpf_cnpj }}</td>
+          </ng-container>
+          <ng-container matColumnDef="telefone">
+            <th mat-header-cell *matHeaderCellDef>Telefone</th>
+            <td mat-cell *matCellDef="let p">{{ p.telefone }}</td>
+          </ng-container>
+          <ng-container matColumnDef="cidade">
+            <th mat-header-cell *matHeaderCellDef>Cidade/UF</th>
+            <td mat-cell *matCellDef="let p">{{ p.cidade }}{{ p.uf ? '/' + p.uf : '' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let p">
+              @if (p.bloqueado) {
+                <mat-chip color="warn" selected>Bloqueado</mat-chip>
+              } @else {
+                <mat-chip [color]="p.ativo ? 'primary' : 'accent'" selected>{{ p.ativo ? 'Ativo' : 'Inativo' }}</mat-chip>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acoes">
+            <th mat-header-cell *matHeaderCellDef>Ações</th>
+            <td mat-cell *matCellDef="let p">
+              <button mat-icon-button color="primary" matTooltip="Editar" (click)="openForm(p)"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button color="warn" matTooltip="Desativar" (click)="delete(p)"><mat-icon>block</mat-icon></button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="cols"></tr>
+          <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data" [attr.colspan]="cols.length">Nenhum proprietário cadastrado</td>
+          </tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

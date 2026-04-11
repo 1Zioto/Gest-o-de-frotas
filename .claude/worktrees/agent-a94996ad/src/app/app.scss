@@ -1,0 +1,8 @@
+/* App-level style overrides — font family cascade */
+* {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+code, .monospace, .placa, .placa-badge {
+  font-family: 'JetBrains Mono', monospace !important;
+}

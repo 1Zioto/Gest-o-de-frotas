@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vercel:*)",
+      "Bash(git -C \"C:\\\\Users\\\\Douglas\\\\Desktop\\\\Claude\\\\gestao-frota 2.0\" log -1 --name-status HEAD)",
+      "Bash(node -e \"import bcryptjs from ''bcryptjs''; console.log\\(''bcryptjs v3 loaded, bcrypt.compare:'', typeof bcryptjs.compare\\)\")",
+      "Bash(node -e \"import crypto from ''crypto''; console.log\\(''SHA-256 de \"\"senha\"\":'', crypto.createHash\\(''sha256''\\).update\\(''senha''\\).digest\\(''hex''\\)\\); console.log\\(''Match:'', crypto.createHash\\(''sha256''\\).update\\(''senha''\\).digest\\(''hex''\\) === ''ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f''\\)\")",
+      "Bash(node --input-type=module -e \"import crypto from ''crypto''; console.log\\(crypto.createHash\\(''sha256''\\).update\\(''senha''\\).digest\\(''hex''\\)\\);\")",
+      "Bash(node --input-type=module -e \":*)",
+      "Bash(npm install:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}
