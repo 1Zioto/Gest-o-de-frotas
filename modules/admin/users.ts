@@ -42,6 +42,11 @@ export async function handleUsers(
   }
 
   if (req.method === 'POST') {
+    const reqUser = req.user as any;
+    if (reqUser?.perfil !== 'admin' && reqUser?.tipo !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem criar usuários.' });
+    }
+
     const { nome, login, tipo, password, ativo } = req.body;
 
     if (!nome || !login || !password) {
@@ -58,6 +63,11 @@ export async function handleUsers(
   }
 
   if (req.method === 'PUT') {
+    const reqUserPut = req.user as any;
+    if (reqUserPut?.perfil !== 'admin' && reqUserPut?.tipo !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem editar usuários.' });
+    }
+
     const { id } = req.query;
     const { nome, login, tipo, password, ativo } = req.body;
 
@@ -83,6 +93,11 @@ export async function handleUsers(
   }
 
   if (req.method === 'DELETE') {
+    const reqUserDel = req.user as any;
+    if (reqUserDel?.perfil !== 'admin' && reqUserDel?.tipo !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem excluir usuários.' });
+    }
+
     const { id } = req.query;
     await sql`UPDATE users SET ativo = FALSE, atualizado_em = NOW() WHERE id = ${id as string}`;
     return res.status(200).json({ message: 'Usuário desativado.' });
