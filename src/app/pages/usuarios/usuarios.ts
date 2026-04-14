@@ -38,6 +38,10 @@ import { UsuarioFormComponent } from './usuario-form.component';
           <mat-icon>add</mat-icon>
           Novo Usuário
         </button>
+        <button *ngIf="!isAdmin" class="btn-novo" disabled>
+          <mat-icon>lock</mat-icon>
+          Acesso Restrito
+        </button>
       </div>
     </div>
 
@@ -92,7 +96,7 @@ import { UsuarioFormComponent } from './usuario-form.component';
             </td>
             <td class="email-cell">{{ u.login }}</td>
             <td>
-              <span class="badge" [class]="'badge-' + u.tipo">
+              <span class="badge" [class]="'badge-' + (u.tipo || '').toLowerCase()">
                 {{ perfilLabel(u.tipo) }}
               </span>
             </td>
@@ -154,6 +158,12 @@ import { UsuarioFormComponent } from './usuario-form.component';
       transition: opacity 0.2s;
       &:hover { opacity: 0.9; }
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      &[disabled] {
+        background: #e2e8f0;
+        color: #94a3b8;
+        cursor: not-allowed;
+        &:hover { opacity: 1; }
+      }
     }
     .progress-bar { margin-bottom: 16px; border-radius: 4px; }
     .summary-cards {
@@ -241,12 +251,15 @@ export class UsuariosComponent implements OnInit {
 
   get isAdmin(): boolean {
     const u = this.auth.getUser();
-    return u?.perfil === 'admin' || u?.tipo === 'admin';
+    if (!u) return false;
+    // Normaliza para minúsculas — o banco pode ter 'Admin', 'admin', etc.
+    const perfil = (u?.perfil || u?.tipo || u?.role || '').toString().toLowerCase();
+    return perfil === 'admin';
   }
 
   get totalAtivos()  { return this.users().filter(u => u.ativo).length; }
   get totalInativos(){ return this.users().filter(u => !u.ativo).length; }
-  get totalAdmins()  { return this.users().filter(u => u.tipo === 'admin').length; }
+  get totalAdmins()  { return this.users().filter(u => (u.tipo || '').toLowerCase() === 'admin').length; }
 
   constructor(
     private api: ApiService,
@@ -289,8 +302,8 @@ export class UsuariosComponent implements OnInit {
   }
 
   perfilLabel(tipo?: string): string {
-    const map: Record<string, string> = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador' };
-    return map[tipo || ''] || tipo || '—';
+    const map: Record<string, string> = { admin: 'Admin', gestor: 'Gestor', operador: 'Operador', motorista: 'Motorista' };
+    return map[(tipo || '').toLowerCase()] || tipo || '—';
   }
 
   avatarColor(nome?: string): string {
