@@ -43,7 +43,8 @@ export async function handleUsers(
 
   if (req.method === 'POST') {
     const reqUser = req.user as any;
-    if (reqUser?.perfil !== 'admin' && reqUser?.tipo !== 'admin') {
+    const reqPerfil = (reqUser?.perfil || reqUser?.tipo || '').toLowerCase();
+    if (reqPerfil !== 'admin') {
       return res.status(403).json({ error: 'Apenas administradores podem criar usuários.' });
     }
 
@@ -64,7 +65,8 @@ export async function handleUsers(
 
   if (req.method === 'PUT') {
     const reqUserPut = req.user as any;
-    if (reqUserPut?.perfil !== 'admin' && reqUserPut?.tipo !== 'admin') {
+    const reqPerfilPut = (reqUserPut?.perfil || reqUserPut?.tipo || '').toLowerCase();
+    if (reqPerfilPut !== 'admin') {
       return res.status(403).json({ error: 'Apenas administradores podem editar usuários.' });
     }
 
@@ -94,7 +96,8 @@ export async function handleUsers(
 
   if (req.method === 'DELETE') {
     const reqUserDel = req.user as any;
-    if (reqUserDel?.perfil !== 'admin' && reqUserDel?.tipo !== 'admin') {
+    const reqPerfilDel = (reqUserDel?.perfil || reqUserDel?.tipo || '').toLowerCase();
+    if (reqPerfilDel !== 'admin') {
       return res.status(403).json({ error: 'Apenas administradores podem excluir usuários.' });
     }
 
