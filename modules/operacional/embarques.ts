@@ -1,6 +1,13 @@
 /**
  * modules/operacional/embarques.ts
  * CRUD de embarques.
+ *
+ * Relacionamentos:
+ *   embarques.id_veiculo  UUID → veiculos.id       (uuid PK)
+ *   embarques.id_motorista UUID → motoristas.id    (uuid, adicionado por migração lazy em motoristas.ts)
+ *
+ * Os forms enviam o id de negócio (id_veiculo TEXT, id_motorista TEXT).
+ * O backend resolve para UUID antes de persistir.
  */
 import type { VercelResponse } from '@vercel/node';
 import { getDb } from '../../server/db.js';
@@ -12,6 +19,29 @@ export async function handleEmbarques(
 ): Promise<VercelResponse> {
   const sql = getDb();
 
+  // ── helpers ─────────────────────────────────────────────────────────────
+  async function resolveVeiculoUuid(val?: string): Promise<string | null> {
+    if (!val) return null;
+    const r = await sql`
+      SELECT id FROM veiculos
+      WHERE id_veiculo = ${val} OR id::text = ${val}
+      LIMIT 1
+    `;
+    return r[0]?.['id'] ?? null;
+  }
+
+  async function resolveMotoristUuid(val?: string): Promise<string | null> {
+    if (!val) return null;
+    // val pode ser o UUID direto (id) ou o text key (id_motorista)
+    const r = await sql`
+      SELECT id FROM motoristas
+      WHERE id::text = ${val} OR id_motorista = ${val}
+      LIMIT 1
+    `;
+    return r[0]?.['id'] ?? null;
+  }
+
+  // ── GET ──────────────────────────────────────────────────────────────────
   if (req.method === 'GET') {
     const { id, status, search } = req.query;
 
@@ -22,7 +52,7 @@ export async function handleEmbarques(
                m.nome AS motorista_nome
         FROM embarques e
         LEFT JOIN veiculos   v ON e.id_veiculo   = v.id
-        LEFT JOIN motoristas m ON e.id_motorista::text = m.id_motorista
+        LEFT JOIN motoristas m ON e.id_motorista  = m.id
         WHERE e.id_embarque = ${id as string}
       `;
       return res.status(200).json(rows[0] ?? null);
@@ -34,7 +64,7 @@ export async function handleEmbarques(
              m.nome AS motorista_nome
       FROM embarques e
       LEFT JOIN veiculos   v ON e.id_veiculo   = v.id
-      LEFT JOIN motoristas m ON e.id_motorista::text = m.id_motorista
+      LEFT JOIN motoristas m ON e.id_motorista  = m.id
       WHERE (${status ? sql`e.status = ${status as string}` : sql`TRUE`})
         AND (${search ? sql`
           e.codigo_embarque ILIKE ${'%' + search + '%'} OR
@@ -48,26 +78,14 @@ export async function handleEmbarques(
     return res.status(200).json(rows);
   }
 
+  // ── POST ─────────────────────────────────────────────────────────────────
   if (req.method === 'POST') {
     const d = req.body;
-    if (!d.codigo_embarque) return res.status(400).json({ error: 'código do embarque é obrigatório.' });
+    if (!d.codigo_embarque)
+      return res.status(400).json({ error: 'Código do embarque é obrigatório.' });
 
-    // Resolver veiculo id (uuid)
-    let veiculoId: string | null = null;
-    if (d.id_veiculo) {
-      const v = await sql`SELECT id FROM veiculos WHERE id_veiculo = ${d.id_veiculo} OR id::text = ${d.id_veiculo} LIMIT 1`;
-      veiculoId = v[0]?.['id'] ?? null;
-    }
-
-    // Resolver motorista id (uuid tentativo via cast)
-    let motoristaId: string | null = null;
-    if (d.id_motorista) {
-      // tenta UUID direto; se não for UUID válido, deixa null
-      try {
-        const m = await sql`SELECT id_motorista FROM motoristas WHERE id_motorista = ${d.id_motorista} LIMIT 1`;
-        if (m[0]) motoristaId = d.id_motorista; // guarda como texto convertível
-      } catch { motoristaId = null; }
-    }
+    const veiculoId    = await resolveVeiculoUuid(d.id_veiculo);
+    const motoristaId  = await resolveMotoristUuid(d.id_motorista);
 
     const rows = await sql`
       INSERT INTO embarques (
@@ -75,7 +93,7 @@ export async function handleEmbarques(
         origem_nome, origem_cidade, origem_uf, origem_endereco,
         destino_nome, destino_cidade, destino_uf, destino_endereco,
         data_coleta, data_previsao_entrega,
-        id_veiculo,
+        id_veiculo, id_motorista,
         descricao_carga, tipo_carga, peso_kg, volume_m3, quantidade,
         valor_frete, custo_estimado, lucro_estimado,
         status, observacoes
@@ -84,8 +102,9 @@ export async function handleEmbarques(
         ${d.origem_nome ?? null}, ${d.origem_cidade ?? null}, ${d.origem_uf ?? null}, ${d.origem_endereco ?? null},
         ${d.destino_nome ?? null}, ${d.destino_cidade ?? null}, ${d.destino_uf ?? null}, ${d.destino_endereco ?? null},
         ${d.data_coleta ?? null}, ${d.data_previsao_entrega ?? null},
-        ${veiculoId},
-        ${d.descricao_carga ?? null}, ${d.tipo_carga ?? null}, ${d.peso_kg ?? null}, ${d.volume_m3 ?? null}, ${d.quantidade ?? null},
+        ${veiculoId}, ${motoristaId},
+        ${d.descricao_carga ?? null}, ${d.tipo_carga ?? null},
+        ${d.peso_kg ?? null}, ${d.volume_m3 ?? null}, ${d.quantidade ?? null},
         ${d.valor_frete ?? null}, ${d.custo_estimado ?? null}, ${d.lucro_estimado ?? null},
         ${d.status ?? 'pendente'}, ${d.observacoes ?? null}
       )
@@ -94,15 +113,13 @@ export async function handleEmbarques(
     return res.status(201).json(rows[0]);
   }
 
+  // ── PUT ──────────────────────────────────────────────────────────────────
   if (req.method === 'PUT') {
     const { id } = req.query;
     const d = req.body;
 
-    let veiculoId: string | null = null;
-    if (d.id_veiculo) {
-      const v = await sql`SELECT id FROM veiculos WHERE id_veiculo = ${d.id_veiculo} OR id::text = ${d.id_veiculo} LIMIT 1`;
-      veiculoId = v[0]?.['id'] ?? null;
-    }
+    const veiculoId   = await resolveVeiculoUuid(d.id_veiculo);
+    const motoristaId = await resolveMotoristUuid(d.id_motorista);
 
     const rows = await sql`
       UPDATE embarques SET
@@ -119,6 +136,7 @@ export async function handleEmbarques(
         data_previsao_entrega  = ${d.data_previsao_entrega ?? null},
         data_entrega_real      = ${d.data_entrega_real ?? null},
         id_veiculo             = ${veiculoId},
+        id_motorista           = ${motoristaId},
         descricao_carga        = ${d.descricao_carga ?? null},
         tipo_carga             = ${d.tipo_carga ?? null},
         peso_kg                = ${d.peso_kg ?? null},
@@ -135,6 +153,7 @@ export async function handleEmbarques(
     return res.status(200).json(rows[0]);
   }
 
+  // ── DELETE ────────────────────────────────────────────────────────────────
   if (req.method === 'DELETE') {
     const { id } = req.query;
     await sql`DELETE FROM embarques WHERE id_embarque = ${id as string}`;

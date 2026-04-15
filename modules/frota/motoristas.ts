@@ -1,16 +1,37 @@
 /**
  * modules/frota/motoristas.ts
  * CRUD de motoristas.
+ *
+ * Migração lazy: adiciona coluna `id UUID` à tabela motoristas caso não exista,
+ * garantindo que embarques e tarefas possam referenciar motoristas por UUID.
  */
 import type { VercelResponse } from '@vercel/node';
 import { getDb } from '../../server/db.js';
 import { AuthenticatedRequest, generateId } from '../shared/middleware.js';
+
+let migrationDone = false;
+
+async function ensureMotoristasUuid() {
+  if (migrationDone) return;
+  const sql = getDb();
+  // Adiciona coluna UUID se ainda não existir
+  await sql`
+    ALTER TABLE motoristas
+    ADD COLUMN IF NOT EXISTS id UUID DEFAULT gen_random_uuid()
+  `;
+  // Preenche linhas que ainda não têm UUID
+  await sql`
+    UPDATE motoristas SET id = gen_random_uuid() WHERE id IS NULL
+  `;
+  migrationDone = true;
+}
 
 export async function handleMotoristas(
   req: AuthenticatedRequest,
   res: VercelResponse
 ): Promise<VercelResponse> {
   const sql = getDb();
+  await ensureMotoristasUuid();
 
   if (req.method === 'GET') {
     const { id, search } = req.query;

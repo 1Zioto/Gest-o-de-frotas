@@ -75,7 +75,7 @@ export interface Embarque {
             <select class="field-input" [(ngModel)]="item.id_motorista" name="id_motorista">
               <option value="">Nenhum</option>
               @for (m of motoristas(); track m.id_motorista) {
-                <option [value]="m.id_motorista">{{ m.nome }}</option>
+                <option [value]="asAny(m).id || m.id_motorista">{{ m.nome }}</option>
               }
             </select>
           </div>
@@ -231,6 +231,8 @@ export class EmbarqueFormComponent implements OnInit {
   veiculos  = signal<Veiculo[]>([]);
   motoristas = signal<Motorista[]>([]);
   saving = signal(false);
+
+  asAny(obj: any) { return obj; }
 
   constructor(
     private dialogRef: MatDialogRef<EmbarqueFormComponent>,
