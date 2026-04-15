@@ -66,6 +66,16 @@ export class LayoutComponent {
       ]
     },
     {
+      label: 'Operacional',
+      icon: 'inventory_2',
+      items: [
+        { label: 'Embarques',  icon: 'inventory_2',  route: '/embarques' },
+        { label: 'CT-es',      icon: 'description',  route: '/ctes' },
+        { label: 'Tarefas',    icon: 'task_alt',     route: '/tarefas' },
+        { label: 'Rastreio',   icon: 'location_on',  route: '/rastreio' },
+      ]
+    },
+    {
       label: 'Configurações',
       icon: 'settings',
       items: [

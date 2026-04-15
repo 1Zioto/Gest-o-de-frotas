@@ -38,6 +38,11 @@ const ROUTE_MAP: Record<string, { fn: string; resource: string }> = {
   // /api/admin
   users:          { fn: 'admin',      resource: 'users' },
   dashboard:      { fn: 'admin',      resource: 'dashboard' },
+
+  // /api/operacional
+  embarques:      { fn: 'operacional', resource: 'embarques' },
+  ctes:           { fn: 'operacional', resource: 'ctes' },
+  tarefas:        { fn: 'operacional', resource: 'tarefas' },
 };
 
 @Injectable({ providedIn: 'root' })
