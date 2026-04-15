@@ -86,7 +86,7 @@ import { CarretaFormComponent } from './carreta-form.component';
             <td>
               <div class="marca-modelo">
                 <span class="marca">{{ getMarca(c) || '—' }}</span>
-                <span *ngIf="c.modelo" class="modelo">{{ c.modelo }}</span>
+                <span *ngIf="$any(c).modelo" class="modelo">{{ $any(c).modelo }}</span>
               </div>
             </td>
             <td>{{ c.tipo_carroceria || '—' }}</td>
@@ -199,7 +199,7 @@ export class CarretasComponent implements OnInit {
       c.placa?.toLowerCase().includes(q) ||
       c.fabricante?.toLowerCase().includes(q) ||
       (c as any).marca?.toLowerCase().includes(q) ||
-      c.modelo?.toLowerCase().includes(q) ||
+      (c as any).modelo?.toLowerCase().includes(q) ||
       c.tipo_carroceria?.toLowerCase().includes(q)
     );
   });
