@@ -515,6 +515,38 @@ $content-bg: #f8fafc;
   mat-icon { font-size: 22px; width: 22px; height: 22px; }
 }
 
+// PWA — indicador offline + botão instalar
+.offline-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  animation: pulse-offline 2s ease-in-out infinite;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+@keyframes pulse-offline {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.install-btn {
+  color: #3b82f6 !important;
+  background: #eff6ff !important;
+  border: 1.5px solid #bfdbfe !important;
+
+  &:hover {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+  }
+}
+
 // ============================================
 // Page Content
 // ============================================

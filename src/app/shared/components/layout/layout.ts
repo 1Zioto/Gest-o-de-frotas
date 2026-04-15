@@ -1,4 +1,4 @@
-import { Component, signal, computed, HostListener } from '@angular/core';
+import { Component, signal, computed, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,10 +26,22 @@ interface NavGroup {
   templateUrl: './layout.html',
   styleUrl: './layout.scss'
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = signal(true);
   expandedGroups = signal<Set<string>>(new Set(['rotinas', 'gestao']));
   isMobile = signal(false);
+
+  // PWA
+  isOffline = signal(!navigator.onLine);
+  canInstall = signal(false);
+  private deferredPrompt: any = null;
+  private onlineHandler  = () => this.isOffline.set(false);
+  private offlineHandler = () => this.isOffline.set(true);
+  private beforeInstallHandler = (e: any) => {
+    e.preventDefault();
+    this.deferredPrompt = e;
+    this.canInstall.set(true);
+  };
 
   navGroups: NavGroup[] = [
     {
@@ -86,6 +98,26 @@ export class LayoutComponent {
 
   constructor(private authService: AuthService) {
     this.checkMobile();
+  }
+
+  ngOnInit() {
+    window.addEventListener('online',  this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
+    window.addEventListener('beforeinstallprompt', this.beforeInstallHandler);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('online',  this.onlineHandler);
+    window.removeEventListener('offline', this.offlineHandler);
+    window.removeEventListener('beforeinstallprompt', this.beforeInstallHandler);
+  }
+
+  async installPwa() {
+    if (!this.deferredPrompt) return;
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    if (outcome === 'accepted') this.canInstall.set(false);
+    this.deferredPrompt = null;
   }
 
   @HostListener('window:resize')

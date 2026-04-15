@@ -1,14 +1,20 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
   "index": "/index.html",
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**"
+  ],
   "assetGroups": [
     {
-      "name": "app",
+      "name": "app-shell",
       "installMode": "prefetch",
+      "updateMode": "prefetch",
       "resources": {
         "files": [
           "/favicon.ico",
-          "/index.csr.html",
           "/index.html",
           "/manifest.webmanifest",
           "/*.css",
@@ -17,11 +23,12 @@
       }
     },
     {
-      "name": "assets",
+      "name": "icons-fonts",
       "installMode": "lazy",
       "updateMode": "prefetch",
       "resources": {
         "files": [
+          "/icons/**",
           "/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
         ]
       }
@@ -29,12 +36,32 @@
   ],
   "dataGroups": [
     {
-      "name": "api-freshness",
-      "urls": ["/api/**"],
+      "name": "api-catalogos",
+      "urls": ["/api/frota/**", "/api/catalogos/**", "/api/admin/**"],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 60,
+        "maxAge": "1h",
+        "timeout": "8s"
+      }
+    },
+    {
+      "name": "api-operacional",
+      "urls": ["/api/operacional/**", "/api/financeiro/**", "/api/manutencao/**"],
       "cacheConfig": {
         "strategy": "freshness",
         "maxSize": 100,
-        "maxAge": "3d",
+        "maxAge": "30m",
+        "timeout": "8s"
+      }
+    },
+    {
+      "name": "api-auth",
+      "urls": ["/api/auth-login"],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 5,
+        "maxAge": "0s",
         "timeout": "10s"
       }
     }

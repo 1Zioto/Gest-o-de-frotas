@@ -97,6 +97,18 @@
       <div class="topbar-spacer"></div>
 
       <div class="topbar-actions">
+        <!-- Indicador offline -->
+        <div class="offline-badge" *ngIf="isOffline()" matTooltip="Sem conexão — dados em cache">
+          <mat-icon>wifi_off</mat-icon>
+          <span>Offline</span>
+        </div>
+
+        <!-- Botão instalar PWA -->
+        <button class="topbar-btn install-btn" *ngIf="canInstall()" (click)="installPwa()"
+                matRipple matTooltip="Instalar aplicativo">
+          <mat-icon>install_mobile</mat-icon>
+        </button>
+
         <button class="topbar-btn" matRipple matTooltip="Notificações">
           <mat-icon>notifications_none</mat-icon>
         </button>
