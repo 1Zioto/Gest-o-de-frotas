@@ -54,14 +54,14 @@ import { AbastecimentoFormComponent } from './abastecimento-form.component';
       <div class="summary-card green">
         <mat-icon>water_drop</mat-icon>
         <div>
-          <span class="summary-num">{{ totalLitros | number:'1.0-0':'pt-BR' }} L</span>
+          <span class="summary-num">{{ fmtNum(totalLitros, 0) }} L</span>
           <span class="summary-label">Total Litros</span>
         </div>
       </div>
       <div class="summary-card orange">
         <mat-icon>attach_money</mat-icon>
         <div>
-          <span class="summary-num">{{ 'R$ ' + (totalGasto | number:'1.2-2':'pt-BR') }}</span>
+          <span class="summary-num">{{ fmtBRL(totalGasto) }}</span>
           <span class="summary-label">Total Gasto</span>
         </div>
       </div>
@@ -98,9 +98,9 @@ import { AbastecimentoFormComponent } from './abastecimento-form.component';
               </span>
               <span *ngIf="!a.tipo_combustivel" class="muted">—</span>
             </td>
-            <td>{{ a.litros ? (a.litros | number:'1.2-3':'pt-BR') + ' L' : '—' }}</td>
-            <td class="muted">{{ a.valor_litro ? 'R$ ' + (a.valor_litro | number:'1.4-4':'pt-BR') : '—' }}</td>
-            <td><strong>{{ a.valor_total ? 'R$ ' + (a.valor_total | number:'1.2-2':'pt-BR') : '—' }}</strong></td>
+            <td>{{ a.litros ? fmtNum(a.litros, 3) + ' L' : '—' }}</td>
+            <td class="muted">{{ a.valor_litro ? fmtBRL(a.valor_litro, 4) : '—' }}</td>
+            <td><strong>{{ a.valor_total ? fmtBRL(a.valor_total) : '—' }}</strong></td>
             <td class="muted">{{ asAny(a).km_atual ? (asAny(a).km_atual | number:'1.0-0':'pt-BR') + ' km' : '—' }}</td>
             <td class="actions-cell">
               <button class="icon-btn" (click)="openForm(a)" matTooltip="Editar">
@@ -267,7 +267,22 @@ export class AbastecimentosComponent implements OnInit {
 
   formatDate(d?: string): string {
     if (!d) return '—';
-    return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR');
+    // Neon devolve datas como ISO completo ("2026-01-15T00:00:00.000Z") ou só data ("2026-01-15")
+    const dateOnly = d.includes('T') ? d.slice(0, 10) : d;
+    return new Date(dateOnly + 'T12:00:00').toLocaleDateString('pt-BR');
+  }
+
+  // Formata número sem depender do locale registrado no Angular
+  fmtNum(value: any, decimals = 2): string {
+    const n = Number(value);
+    if (isNaN(n)) return '—';
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  }
+
+  fmtBRL(value: any, decimals = 2): string {
+    const n = Number(value);
+    if (isNaN(n)) return '—';
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
   }
 
   fuelColor(tipo?: string): string {
