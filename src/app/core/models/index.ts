@@ -157,6 +157,8 @@ export interface DespesaAdministrativa {
 }
 
 export interface Transporte {
+  ativo?: boolean;
+  veiculo_nome?: string;
   id?: number;
   id_transporte: string;
   data?: string;

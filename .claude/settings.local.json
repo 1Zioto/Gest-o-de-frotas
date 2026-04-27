@@ -8,7 +8,9 @@
       "Bash(node --input-type=module -e \"import crypto from ''crypto''; console.log\\(crypto.createHash\\(''sha256''\\).update\\(''senha''\\).digest\\(''hex''\\)\\);\")",
       "Bash(node --input-type=module -e \":*)",
       "Bash(npm install:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(npm run:*)",
+      "Bash(npx ng:*)"
     ]
   }
 }
