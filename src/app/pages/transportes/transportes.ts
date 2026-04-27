@@ -174,8 +174,8 @@ export class TransportesComponent implements OnInit {
 
   toggleAtivo(t: Transporte) {
     const action = t.ativo !== false ? 'desativar' : 'reativar';
-    if (!confirm(`Deseja ${action} o transporte ${t.id}?`)) return;
-    this.api.put<Transporte>('transportes', t.id, { ...t, ativo: t.ativo === false }).subscribe({
+    if (!confirm(`Deseja ${action} o transporte ${t.id_transporte}?`)) return;
+    this.api.put<Transporte>('transportes', t.id_transporte, { ...t, ativo: t.ativo === false }).subscribe({
       next: () => {
         this.snackBar.open(`Transporte ${t.ativo !== false ? 'desativado' : 'reativado'} com sucesso!`, 'OK', { duration: 3000 });
         this.load();
