@@ -1,6 +1,7 @@
 # Node
 node_modules/
 npm-debug.log*
+ng-serve*.log
 
 # Angular build
 dist/

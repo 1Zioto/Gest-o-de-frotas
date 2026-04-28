@@ -3,16 +3,18 @@
  * Função serverless do módulo Operacional.
  *
  *   /api/operacional?resource=embarques
+ *   /api/operacional?resource=containers
  *   /api/operacional?resource=ctes
  *   /api/operacional?resource=tarefas
  */
 import type { VercelResponse } from '@vercel/node';
 import { withAuth, AuthenticatedRequest } from '../modules/shared/middleware.js';
 import { handleEmbarques } from '../modules/operacional/embarques.js';
+import { handleContainers } from '../modules/operacional/containers.js';
 import { handleCtes }      from '../modules/operacional/ctes.js';
 import { handleTarefas }   from '../modules/operacional/tarefas.js';
 
-const RESOURCES = ['embarques', 'ctes', 'tarefas'] as const;
+const RESOURCES = ['embarques', 'containers', 'ctes', 'tarefas'] as const;
 type OperacionalResource = (typeof RESOURCES)[number];
 
 export default withAuth(async (req: AuthenticatedRequest, res: VercelResponse) => {
@@ -26,6 +28,7 @@ export default withAuth(async (req: AuthenticatedRequest, res: VercelResponse) =
 
   switch (resource) {
     case 'embarques': return handleEmbarques(req, res);
+    case 'containers': return handleContainers(req, res);
     case 'ctes':      return handleCtes(req, res);
     case 'tarefas':   return handleTarefas(req, res);
   }

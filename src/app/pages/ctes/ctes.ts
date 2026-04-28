@@ -65,6 +65,7 @@ const CTE_STATUS: Record<string, { label: string; bg: string; color: string }> =
         <thead>
           <tr>
             <th>Número CT-e</th>
+            <th>Viagem</th>
             <th>Embarque</th>
             <th>Remetente → Destinatário</th>
             <th>Emissão</th>
@@ -81,6 +82,10 @@ const CTE_STATUS: Record<string, { label: string; bg: string; color: string }> =
                 <span class="num-badge">{{ c.numero_cte }}</span>
                 <span *ngIf="c.serie" class="serie">Série {{ c.serie }}</span>
               </div>
+            </td>
+            <td>
+              <span *ngIf="c.codigo_viagem" class="vipe-badge">{{ c.codigo_viagem }}</span>
+              <span *ngIf="!c.codigo_viagem" class="muted">—</span>
             </td>
             <td>
               <span *ngIf="c.codigo_embarque" class="emb-badge">{{ c.codigo_embarque }}</span>
@@ -117,7 +122,7 @@ const CTE_STATUS: Record<string, { label: string; bg: string; color: string }> =
             </td>
           </tr>
           <tr *ngIf="!loading() && filtered().length === 0">
-            <td colspan="8" class="empty-row">
+            <td colspan="9" class="empty-row">
               <mat-icon>search_off</mat-icon><span>Nenhum CT-e encontrado.</span>
             </td>
           </tr>
@@ -146,6 +151,7 @@ const CTE_STATUS: Record<string, { label: string; bg: string; color: string }> =
     .cte-num { display:flex; flex-direction:column; gap:2px; }
     .num-badge { font-family:monospace; font-weight:700; font-size:13px; }
     .serie { font-size:11px; color:#94a3b8; }
+    .vipe-badge { background:#0f172a; color:#f8fafc; font-family:monospace; font-size:11px; font-weight:700; letter-spacing:0.05em; padding:3px 8px; border-radius:6px; white-space:nowrap; }
     .emb-badge { background:#e0f2fe; color:#0369a1; font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; white-space:nowrap; }
     .partes { display:flex; align-items:center; gap:6px; white-space:nowrap; overflow:hidden; }
     .parte { font-size:12px; max-width:120px; overflow:hidden; text-overflow:ellipsis; }
@@ -178,6 +184,7 @@ export class CtesComponent implements OnInit {
       c.numero_cte?.toLowerCase().includes(q) ||
       c.remetente_nome?.toLowerCase().includes(q) ||
       c.destinatario_nome?.toLowerCase().includes(q) ||
+      c.codigo_viagem?.toLowerCase().includes(q) ||
       c.codigo_embarque?.toLowerCase().includes(q)
     );
   });

@@ -8,6 +8,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/services/api.service';
 import { Embarque } from '../embarques/embarque-form.component';
+import { ContainerViagem } from '../containers/containers';
 
 export interface Cte {
   id_cte?: string;
@@ -15,6 +16,9 @@ export interface Cte {
   serie?: string;
   chave_acesso?: string;
   id_embarque: string;
+  id_container?: string;
+  codigo_viagem?: string;
+  numero_container?: string;
   codigo_embarque?: string;
   remetente_nome?: string; remetente_cnpj_cpf?: string;
   destinatario_nome?: string; destinatario_cnpj_cpf?: string;
@@ -63,6 +67,17 @@ export interface Cte {
               <option value="emitido">Emitido</option>
               <option value="autorizado">Autorizado</option>
               <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field span2">
+            <label>Viagem / Container</label>
+            <select class="field-input" [(ngModel)]="item.id_container" name="id_container" (ngModelChange)="onContainerChange($event)">
+              <option value="">Selecione a viagem</option>
+              @for (c of containers(); track c.id_container) {
+                <option [value]="c.id_container">{{ c.codigo_viagem }} — {{ c.codigo_embarque }}{{ c.numero_container ? ' — ' + c.numero_container : '' }}</option>
+              }
             </select>
           </div>
         </div>
@@ -209,6 +224,7 @@ export interface Cte {
 export class CteFormComponent implements OnInit {
   item: Partial<Cte> = { status: 'emitido' };
   embarques = signal<Embarque[]>([]);
+  containers = signal<ContainerViagem[]>([]);
   saving = signal(false);
 
   constructor(
@@ -222,6 +238,12 @@ export class CteFormComponent implements OnInit {
 
   ngOnInit() {
     this.api.get<Embarque[]>('embarques').subscribe(e => this.embarques.set(e));
+    this.api.get<ContainerViagem[]>('containers').subscribe(c => this.containers.set(c));
+  }
+
+  onContainerChange(id: string) {
+    const container = this.containers().find(c => c.id_container === id);
+    if (container) this.item.id_embarque = container.id_embarque;
   }
 
   save() {

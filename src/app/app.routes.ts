@@ -25,6 +25,7 @@ export const routes: Routes = [
       { path: 'registros', loadComponent: () => import('./pages/registros/registros').then(m => m.RegistrosComponent) },
       { path: 'valores-combustivel', loadComponent: () => import('./pages/valores/valores').then(m => m.ValoresComponent) },
       { path: 'embarques', loadComponent: () => import('./pages/embarques/embarques').then(m => m.EmbarquesComponent) },
+      { path: 'containers', loadComponent: () => import('./pages/containers/containers').then(m => m.ContainersComponent) },
       { path: 'ctes', loadComponent: () => import('./pages/ctes/ctes').then(m => m.CtesComponent) },
       { path: 'tarefas', loadComponent: () => import('./pages/tarefas/tarefas').then(m => m.TarefasComponent) },
       { path: 'rastreio', loadComponent: () => import('./pages/rastreio/rastreio').then(m => m.RastreioComponent) },

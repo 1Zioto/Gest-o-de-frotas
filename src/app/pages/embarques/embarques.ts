@@ -78,6 +78,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
             <th>Coleta</th>
             <th>Previsão</th>
             <th>Veículo</th>
+            <th>Containers</th>
             <th>Frete</th>
             <th>Status</th>
             <th>Ações</th>
@@ -99,6 +100,12 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
               <span *ngIf="e.placa" class="placa-sm">{{ e.placa }}</span>
               <span *ngIf="!e.placa" class="muted">—</span>
             </td>
+            <td>
+              <div class="containers-cell">
+                <span class="container-count">{{ e.containers_gerados || 0 }}/{{ e.quantidade_containers || 0 }}</span>
+                <span *ngIf="e.ordem_gerada" class="ordem-chip">Gerada</span>
+              </div>
+            </td>
             <td class="bold">{{ e.valor_frete ? fmtBRL(e.valor_frete) : '—' }}</td>
             <td>
               <span class="status-chip"
@@ -108,12 +115,13 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
               </span>
             </td>
             <td class="actions-cell">
+              <button class="icon-btn generate-btn" (click)="gerarOrdem(e)" matTooltip="Gerar ordem de carregamento"><mat-icon>playlist_add_check</mat-icon></button>
               <button class="icon-btn" (click)="openForm(e)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
               <button class="icon-btn danger-btn" (click)="remover(e)" matTooltip="Remover"><mat-icon>delete</mat-icon></button>
             </td>
           </tr>
           <tr *ngIf="!loading() && filtered().length === 0">
-            <td colspan="8" class="empty-row">
+            <td colspan="9" class="empty-row">
               <mat-icon>search_off</mat-icon>
               <span>Nenhum embarque encontrado.</span>
             </td>
@@ -145,11 +153,15 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
     .cidade { font-size:13px; font-weight:500; }
     .arrow { font-size:14px; width:14px; height:14px; color:#94a3b8; }
     .placa-sm { background:#e2e8f0; color:#0f172a; font-family:monospace; font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; }
+    .containers-cell { display:flex; align-items:center; gap:6px; white-space:nowrap; }
+    .container-count { font-family:monospace; font-size:12px; font-weight:700; color:#0f172a; }
+    .ordem-chip { background:#dcfce7; color:#166534; font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; text-transform:uppercase; }
     .muted { color:#94a3b8; }
     .bold { font-weight:700; }
     .status-chip { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
     .actions-cell { display:flex; gap:4px; }
     .icon-btn { background:none; border:none; cursor:pointer; width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#64748b; transition:background 0.15s; &:hover { background:#f1f5f9; color:#1e293b; } mat-icon { font-size:17px; width:17px; height:17px; } }
+    .generate-btn:hover { background:#e0f2fe !important; color:#0369a1 !important; }
     .danger-btn:hover { background:#fee2e2 !important; color:#dc2626 !important; }
     .empty-row { text-align:center; padding:48px 16px !important; color:#94a3b8; display:flex; align-items:center; justify-content:center; gap:10px; mat-icon { font-size:22px; width:22px; height:22px; } }
   `]
@@ -195,6 +207,23 @@ export class EmbarquesComponent implements OnInit {
   openForm(e?: Embarque) {
     this.dialog.open(EmbarqueFormComponent, { data: e || null, width: '760px', maxWidth: '95vw' })
       .afterClosed().subscribe(ok => { if (ok) this.load(); });
+  }
+
+  gerarOrdem(e: Embarque) {
+    const total = Number(e.quantidade_containers) || 0;
+    if (total <= 0) {
+      this.snackBar.open('Informe a quantidade de containers no embarque antes de gerar a ordem.', 'OK', { duration: 3500 });
+      return;
+    }
+    if (e.ordem_gerada && !confirm(`A ordem do embarque ${e.codigo_embarque} já foi gerada. Gerar novamente criará apenas viagens faltantes. Continuar?`)) return;
+
+    this.api.post<{ created: number; total: number }>('containers', { action: 'gerar-ordem', id_embarque: e.id_embarque }).subscribe({
+      next: r => {
+        this.snackBar.open(`Ordem gerada: ${r.created} nova(s) viagem(ns), ${r.total} no total.`, 'OK', { duration: 4000 });
+        this.load();
+      },
+      error: err => this.snackBar.open(err.error?.error || 'Erro ao gerar ordem.', 'OK', { duration: 4000 })
+    });
   }
 
   remover(e: Embarque) {

@@ -17,8 +17,10 @@ export interface Embarque {
   data_coleta?: string; data_previsao_entrega?: string; data_entrega_real?: string;
   id_veiculo?: string; id_motorista?: string;
   descricao_carga?: string; tipo_carga?: string; peso_kg?: number; volume_m3?: number; quantidade?: number;
+  quantidade_containers?: number;
   valor_frete?: number; custo_estimado?: number; lucro_estimado?: number;
   status?: string; observacoes?: string;
+  ordem_gerada?: boolean; containers_gerados?: number;
   placa?: string; veiculo_modelo?: string; motorista_nome?: string;
   created_at?: string;
 }
@@ -156,6 +158,10 @@ export interface Embarque {
           <div class="field">
             <label>Qtd.</label>
             <input type="number" class="field-input" [(ngModel)]="item.quantidade" name="quantidade" min="0">
+          </div>
+          <div class="field">
+            <label>Containers</label>
+            <input type="number" class="field-input" [(ngModel)]="item.quantidade_containers" name="quantidade_containers" min="0">
           </div>
         </div>
 
