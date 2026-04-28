@@ -3,6 +3,36 @@ import { getDb } from '../../server/db.js';
 
 let initPromise: Promise<void> | null = null;
 
+const UFS_BRASIL = [
+  ['AC', 'Acre'],
+  ['AL', 'Alagoas'],
+  ['AP', 'Amapá'],
+  ['AM', 'Amazonas'],
+  ['BA', 'Bahia'],
+  ['CE', 'Ceará'],
+  ['DF', 'Distrito Federal'],
+  ['ES', 'Espírito Santo'],
+  ['GO', 'Goiás'],
+  ['MA', 'Maranhão'],
+  ['MT', 'Mato Grosso'],
+  ['MS', 'Mato Grosso do Sul'],
+  ['MG', 'Minas Gerais'],
+  ['PA', 'Pará'],
+  ['PB', 'Paraíba'],
+  ['PR', 'Paraná'],
+  ['PE', 'Pernambuco'],
+  ['PI', 'Piauí'],
+  ['RJ', 'Rio de Janeiro'],
+  ['RN', 'Rio Grande do Norte'],
+  ['RS', 'Rio Grande do Sul'],
+  ['RO', 'Rondônia'],
+  ['RR', 'Roraima'],
+  ['SC', 'Santa Catarina'],
+  ['SP', 'São Paulo'],
+  ['SE', 'Sergipe'],
+  ['TO', 'Tocantins'],
+];
+
 export function newId(prefix: string): string {
   return `${prefix}-${randomUUID()}`;
 }
@@ -124,6 +154,18 @@ export async function ensureOperationalDbInitialized() {
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS observacao_erro TEXT`;
       await sql`ALTER TABLE ctes ADD COLUMN IF NOT EXISTS id_container TEXT`;
       await sql`ALTER TABLE containers ADD COLUMN IF NOT EXISTS id_cte TEXT`;
+
+      for (const [codigo, nome] of UFS_BRASIL) {
+        await sql`
+          INSERT INTO embarque_cadastros (id_cadastro, tipo, nome, codigo, uf, observacoes, ativo)
+          SELECT ${newId('CAD-EMB')}, 'uf', ${nome}, ${codigo}, ${codigo}, 'UF Brasil', TRUE
+          WHERE NOT EXISTS (
+            SELECT 1
+            FROM embarque_cadastros
+            WHERE tipo = 'uf' AND codigo = ${codigo}
+          )
+        `;
+      }
     })().catch(error => {
       initPromise = null;
       throw error;
