@@ -34,11 +34,14 @@ export async function ensureOperationalDbInitialized() {
           destino_cidade TEXT,
           destino_uf TEXT,
           destino_endereco TEXT,
+          data_recebimento_carregamento TIMESTAMP,
+          data_prevista_agendamento TIMESTAMP,
           data_coleta TIMESTAMP,
           data_previsao_entrega TIMESTAMP,
           data_entrega_real TIMESTAMP,
           id_veiculo TEXT,
           id_motorista TEXT,
+          motorista_segue_viagem BOOLEAN DEFAULT TRUE,
           descricao_carga TEXT,
           tipo_carga TEXT,
           peso_kg NUMERIC,
@@ -48,8 +51,9 @@ export async function ensureOperationalDbInitialized() {
           valor_frete NUMERIC,
           custo_estimado NUMERIC,
           lucro_estimado NUMERIC,
-          status TEXT DEFAULT 'pendente',
+          status TEXT DEFAULT 'fazer_agendamento',
           observacoes TEXT,
+          observacao_erro TEXT,
           ordem_gerada BOOLEAN DEFAULT FALSE,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
@@ -100,6 +104,10 @@ export async function ensureOperationalDbInitialized() {
 
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS quantidade_containers INTEGER DEFAULT 0`;
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS ordem_gerada BOOLEAN DEFAULT FALSE`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_recebimento_carregamento TIMESTAMP`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_prevista_agendamento TIMESTAMP`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS motorista_segue_viagem BOOLEAN DEFAULT TRUE`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS observacao_erro TEXT`;
       await sql`ALTER TABLE ctes ADD COLUMN IF NOT EXISTS id_container TEXT`;
       await sql`ALTER TABLE containers ADD COLUMN IF NOT EXISTS id_cte TEXT`;
     })().catch(error => {

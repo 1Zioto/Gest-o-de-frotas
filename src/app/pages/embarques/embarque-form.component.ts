@@ -14,12 +14,14 @@ export interface Embarque {
   codigo_embarque: string;
   origem_nome?: string; origem_cidade?: string; origem_uf?: string; origem_endereco?: string;
   destino_nome?: string; destino_cidade?: string; destino_uf?: string; destino_endereco?: string;
+  data_recebimento_carregamento?: string; data_prevista_agendamento?: string;
   data_coleta?: string; data_previsao_entrega?: string; data_entrega_real?: string;
   id_veiculo?: string; id_motorista?: string;
+  motorista_segue_viagem?: boolean;
   descricao_carga?: string; tipo_carga?: string; peso_kg?: number; volume_m3?: number; quantidade?: number;
   quantidade_containers?: number;
   valor_frete?: number; custo_estimado?: number; lucro_estimado?: number;
-  status?: string; observacoes?: string;
+  status?: string; observacoes?: string; observacao_erro?: string;
   ordem_gerada?: boolean; containers_gerados?: number;
   placa?: string; veiculo_modelo?: string; motorista_nome?: string;
   created_at?: string;
@@ -54,10 +56,13 @@ export interface Embarque {
           <div class="field">
             <label>Status</label>
             <select class="field-input" [(ngModel)]="item.status" name="status">
-              <option value="pendente">Pendente</option>
-              <option value="em_transporte">Em Transporte</option>
-              <option value="entregue">Entregue</option>
-              <option value="cancelado">Cancelado</option>
+              <option value="fazer_agendamento">Fazer agendamento</option>
+              <option value="agendado">Agendado</option>
+              <option value="ordem_retirada_enviada">Ordem de retirada enviada</option>
+              <option value="enviar_ordem_carregamento">Enviar ordem de carregamento</option>
+              <option value="aguardando_carregamento">Aguardando carregamento</option>
+              <option value="viagem_finalizada">Viagem finalizada</option>
+              <option value="erro_processo">Erro no processo</option>
             </select>
           </div>
         </div>
@@ -80,6 +85,13 @@ export interface Embarque {
                 <option [value]="asAny(m).id || m.id_motorista">{{ m.nome }}</option>
               }
             </select>
+          </div>
+          <div class="field toggle-field">
+            <label>Motorista segue viagem?</label>
+            <label class="check-row">
+              <input type="checkbox" [(ngModel)]="item.motorista_segue_viagem" name="motorista_segue_viagem">
+              <span>Sim</span>
+            </label>
           </div>
         </div>
 
@@ -122,9 +134,19 @@ export interface Embarque {
         <div class="section-label">Datas</div>
         <div class="form-row three">
           <div class="field">
+            <label>Recebimento do carregamento</label>
+            <input type="datetime-local" class="field-input" [(ngModel)]="item.data_recebimento_carregamento" name="data_recebimento_carregamento">
+          </div>
+          <div class="field">
+            <label>Previsão de agendamento</label>
+            <input type="datetime-local" class="field-input" [(ngModel)]="item.data_prevista_agendamento" name="data_prevista_agendamento">
+          </div>
+          <div class="field">
             <label>Data de Coleta</label>
             <input type="datetime-local" class="field-input" [(ngModel)]="item.data_coleta" name="data_coleta">
           </div>
+        </div>
+        <div class="form-row three">
           <div class="field">
             <label>Previsão de Entrega</label>
             <input type="datetime-local" class="field-input" [(ngModel)]="item.data_previsao_entrega" name="data_previsao_entrega">
@@ -194,6 +216,10 @@ export interface Embarque {
         <div class="field">
           <textarea class="field-input textarea" [(ngModel)]="item.observacoes" name="observacoes" rows="2" placeholder="Notas adicionais..."></textarea>
         </div>
+        <div class="field" *ngIf="item.status === 'erro_processo'">
+          <label>Motivo do erro no processo</label>
+          <textarea class="field-input textarea" [(ngModel)]="item.observacao_erro" name="observacao_erro" rows="2" placeholder="Descreva o motivo do erro..."></textarea>
+        </div>
 
       </form>
     </mat-dialog-content>
@@ -219,6 +245,9 @@ export interface Embarque {
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:4px; &.three { grid-template-columns:1fr 1fr 1fr; } &.four { grid-template-columns:1fr 1fr 1fr 1fr; } }
     .span2 { grid-column:span 2; }
     .field { display:flex; flex-direction:column; gap:5px; }
+    .toggle-field { justify-content:flex-end; }
+    .check-row { height:40px; display:flex; align-items:center; gap:8px; font-size:13px; color:#1e293b; font-weight:600; }
+    .check-row input { width:16px; height:16px; accent-color:#0369a1; }
     label { font-size:12px; font-weight:600; color:#475569; }
     .req { color:#ef4444; }
     .field-input { height:40px; border:1.5px solid #e2e8f0; border-radius:8px; padding:0 12px; font-size:14px; color:#1e293b; font-family:inherit; background:white; outline:none; width:100%; box-sizing:border-box; transition:border-color 0.15s; &:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1); } }
@@ -233,7 +262,7 @@ export interface Embarque {
   `]
 })
 export class EmbarqueFormComponent implements OnInit {
-  item: Partial<Embarque> = { status: 'pendente' };
+  item: Partial<Embarque> = { status: 'fazer_agendamento', motorista_segue_viagem: true };
   veiculos  = signal<Veiculo[]>([]);
   motoristas = signal<Motorista[]>([]);
   saving = signal(false);
@@ -259,6 +288,14 @@ export class EmbarqueFormComponent implements OnInit {
       this.snackBar.open('Código do embarque é obrigatório', 'OK', { duration: 3000 });
       return;
     }
+    if (!this.isValidScheduleWindow()) {
+      this.snackBar.open('A data prevista de agendamento deve ficar entre o recebimento do carregamento e D-1 da coleta.', 'OK', { duration: 4500 });
+      return;
+    }
+    if (this.item.status === 'erro_processo' && !this.item.observacao_erro?.trim()) {
+      this.snackBar.open('Informe o motivo do erro no processo.', 'OK', { duration: 3500 });
+      return;
+    }
     this.saving.set(true);
     const obs = this.data
       ? this.api.put<Embarque>('embarques', this.data.id_embarque!, this.item)
@@ -267,5 +304,15 @@ export class EmbarqueFormComponent implements OnInit {
       next: () => { this.saving.set(false); this.dialogRef.close(true); },
       error: e => { this.saving.set(false); this.snackBar.open(e.error?.error || 'Erro ao salvar', 'OK', { duration: 3000 }); }
     });
+  }
+
+  private isValidScheduleWindow(): boolean {
+    if (!this.item.data_prevista_agendamento || !this.item.data_recebimento_carregamento || !this.item.data_coleta) return true;
+    const prevista = new Date(this.item.data_prevista_agendamento);
+    const recebimento = new Date(this.item.data_recebimento_carregamento);
+    const limite = new Date(this.item.data_coleta);
+    limite.setDate(limite.getDate() - 1);
+    limite.setHours(23, 59, 59, 999);
+    return prevista >= recebimento && prevista <= limite;
   }
 }

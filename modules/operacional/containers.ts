@@ -59,7 +59,11 @@ export async function handleContainers(req: AuthenticatedRequest, res: VercelRes
       `;
     }
 
-    await sql`UPDATE embarques SET ordem_gerada = TRUE, updated_at = NOW() WHERE id_embarque = ${idEmbarque}`;
+    await sql`
+      UPDATE embarques
+      SET ordem_gerada = TRUE, status = 'aguardando_carregamento', updated_at = NOW()
+      WHERE id_embarque = ${idEmbarque}
+    `;
     return res.status(201).json({ created: faltantes, total: Math.max(desejado, existentes.length) });
   }
 

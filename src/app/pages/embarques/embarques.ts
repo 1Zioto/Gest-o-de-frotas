@@ -11,10 +11,13 @@ import { ApiService } from '../../core/services/api.service';
 import { Embarque, EmbarqueFormComponent } from './embarque-form.component';
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; icon: string }> = {
-  pendente:      { label: 'Pendente',       bg: '#fef9c3', color: '#854d0e', icon: 'schedule' },
-  em_transporte: { label: 'Em Transporte',  bg: '#dbeafe', color: '#1e40af', icon: 'local_shipping' },
-  entregue:      { label: 'Entregue',       bg: '#dcfce7', color: '#166534', icon: 'check_circle' },
-  cancelado:     { label: 'Cancelado',      bg: '#fee2e2', color: '#991b1b', icon: 'cancel' },
+  fazer_agendamento:          { label: 'Fazer agendamento',           bg: '#e0f2fe', color: '#0369a1', icon: 'event_available' },
+  agendado:                   { label: 'Agendado',                    bg: '#fef9c3', color: '#854d0e', icon: 'event' },
+  ordem_retirada_enviada:     { label: 'Ordem de retirada enviada',   bg: '#dbeafe', color: '#1e40af', icon: 'outbox' },
+  enviar_ordem_carregamento:  { label: 'Enviar ordem carregamento',   bg: '#fae8ff', color: '#86198f', icon: 'assignment' },
+  aguardando_carregamento:    { label: 'Aguardando carregamento',     bg: '#ffedd5', color: '#9a3412', icon: 'warehouse' },
+  viagem_finalizada:          { label: 'Viagem finalizada',           bg: '#dcfce7', color: '#166534', icon: 'check_circle' },
+  erro_processo:              { label: 'Erro no processo',            bg: '#fee2e2', color: '#991b1b', icon: 'report_problem' },
 };
 
 @Component({
@@ -32,9 +35,10 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
       <div class="header-actions">
         <div class="filter-pills">
           <button class="pill" [class.active]="filtroStatus===''" (click)="setStatus('')">Todos</button>
-          <button class="pill" [class.active]="filtroStatus==='pendente'" (click)="setStatus('pendente')">Pendente</button>
-          <button class="pill em_transporte" [class.active]="filtroStatus==='em_transporte'" (click)="setStatus('em_transporte')">Em Transporte</button>
-          <button class="pill entregue" [class.active]="filtroStatus==='entregue'" (click)="setStatus('entregue')">Entregue</button>
+          <button class="pill" [class.active]="filtroStatus==='fazer_agendamento'" (click)="setStatus('fazer_agendamento')">Agendar</button>
+          <button class="pill" [class.active]="filtroStatus==='agendado'" (click)="setStatus('agendado')">Agendado</button>
+          <button class="pill" [class.active]="filtroStatus==='enviar_ordem_carregamento'" (click)="setStatus('enviar_ordem_carregamento')">Enviar OC</button>
+          <button class="pill" [class.active]="filtroStatus==='erro_processo'" (click)="setStatus('erro_processo')">Erro</button>
         </div>
         <div class="search-box">
           <mat-icon>search</mat-icon>
@@ -75,8 +79,8 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
           <tr>
             <th>Código</th>
             <th>Origem → Destino</th>
+            <th>Agendamento</th>
             <th>Coleta</th>
-            <th>Previsão</th>
             <th>Veículo</th>
             <th>Containers</th>
             <th>Frete</th>
@@ -94,8 +98,8 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
                 <span class="cidade">{{ e.destino_cidade || '—' }}{{ e.destino_uf ? '/' + e.destino_uf : '' }}</span>
               </div>
             </td>
+            <td class="muted">{{ fmtDate(e.data_prevista_agendamento) }}</td>
             <td class="muted">{{ fmtDate(e.data_coleta) }}</td>
-            <td class="muted">{{ fmtDate(e.data_previsao_entrega) }}</td>
             <td>
               <span *ngIf="e.placa" class="placa-sm">{{ e.placa }}</span>
               <span *ngIf="!e.placa" class="muted">—</span>
@@ -109,13 +113,16 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
             <td class="bold">{{ e.valor_frete ? fmtBRL(e.valor_frete) : '—' }}</td>
             <td>
               <span class="status-chip"
-                [style.background]="getStatus(e.status).bg"
-                [style.color]="getStatus(e.status).color">
-                {{ getStatus(e.status).label }}
+                [style.background]="getStatus(effectiveStatus(e)).bg"
+                [style.color]="getStatus(effectiveStatus(e)).color"
+                [matTooltip]="statusHint(e)">
+                {{ getStatus(effectiveStatus(e)).label }}
               </span>
             </td>
             <td class="actions-cell">
               <button class="icon-btn generate-btn" (click)="gerarOrdem(e)" matTooltip="Gerar ordem de carregamento"><mat-icon>playlist_add_check</mat-icon></button>
+              <button class="icon-btn finish-btn" (click)="finalizarViagem(e)" matTooltip="Finalizar viagem"><mat-icon>check_circle</mat-icon></button>
+              <button class="icon-btn error-btn" (click)="marcarErro(e)" matTooltip="Registrar erro no processo"><mat-icon>report_problem</mat-icon></button>
               <button class="icon-btn" (click)="openForm(e)" matTooltip="Editar"><mat-icon>edit</mat-icon></button>
               <button class="icon-btn danger-btn" (click)="remover(e)" matTooltip="Remover"><mat-icon>delete</mat-icon></button>
             </td>
@@ -138,7 +145,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
     .count-badge { background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:700; border-radius:20px; padding:2px 10px; }
     .header-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .filter-pills { display:flex; gap:4px; background:#f1f5f9; border-radius:10px; padding:3px; }
-    .pill { background:none; border:none; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; transition:all 0.15s; &.active { background:white; color:#0f172a; box-shadow:0 1px 3px rgba(0,0,0,.1); } &.em_transporte.active { color:#1e40af; } &.entregue.active { color:#166534; } }
+    .pill { background:none; border:none; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:600; color:#64748b; cursor:pointer; transition:all 0.15s; &.active { background:white; color:#0f172a; box-shadow:0 1px 3px rgba(0,0,0,.1); } }
     .search-box { display:flex; align-items:center; gap:8px; background:white; border:1.5px solid #e2e8f0; border-radius:10px; padding:0 12px; width:240px; &:focus-within { border-color:#3b82f6; } mat-icon { color:#94a3b8; font-size:18px; width:18px; height:18px; flex-shrink:0; } input { border:none; outline:none; font-size:13px; color:#1e293b; padding:9px 0; background:transparent; font-family:inherit; flex:1; } }
     .btn-novo { display:flex; align-items:center; gap:6px; background:linear-gradient(135deg,#0ea5e9,#0369a1); color:white; border:none; border-radius:10px; padding:10px 18px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; transition:opacity 0.2s; &:hover { opacity:0.9; } mat-icon { font-size:18px; width:18px; height:18px; } }
     .progress-bar { margin-bottom:16px; border-radius:4px; }
@@ -162,6 +169,8 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
     .actions-cell { display:flex; gap:4px; }
     .icon-btn { background:none; border:none; cursor:pointer; width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#64748b; transition:background 0.15s; &:hover { background:#f1f5f9; color:#1e293b; } mat-icon { font-size:17px; width:17px; height:17px; } }
     .generate-btn:hover { background:#e0f2fe !important; color:#0369a1 !important; }
+    .finish-btn:hover { background:#dcfce7 !important; color:#166534 !important; }
+    .error-btn:hover { background:#fee2e2 !important; color:#991b1b !important; }
     .danger-btn:hover { background:#fee2e2 !important; color:#dc2626 !important; }
     .empty-row { text-align:center; padding:48px 16px !important; color:#94a3b8; display:flex; align-items:center; justify-content:center; gap:10px; mat-icon { font-size:22px; width:22px; height:22px; } }
   `]
@@ -176,7 +185,7 @@ export class EmbarquesComponent implements OnInit {
 
   filtered = computed(() => {
     let list = this.embarques();
-    if (this.filtroStatus) list = list.filter(e => e.status === this.filtroStatus);
+    if (this.filtroStatus) list = list.filter(e => this.effectiveStatus(e) === this.filtroStatus);
     const q = this.search.toLowerCase();
     if (!q) return list;
     return list.filter(e =>
@@ -188,7 +197,7 @@ export class EmbarquesComponent implements OnInit {
   });
 
   get totalFrete() { return this.filtered().reduce((s, e) => s + (Number(e.valor_frete) || 0), 0); }
-  countByStatus(s: string) { return this.embarques().filter(e => e.status === s).length; }
+  countByStatus(s: string) { return this.embarques().filter(e => this.effectiveStatus(e) === s).length; }
   getStatus(s?: string) { return STATUS_CONFIG[s || ''] ?? { label: s || '—', bg: '#f1f5f9', color: '#64748b', icon: 'help' }; }
 
   constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
@@ -210,6 +219,8 @@ export class EmbarquesComponent implements OnInit {
   }
 
   gerarOrdem(e: Embarque) {
+    const status = this.effectiveStatus(e);
+    if (status !== 'enviar_ordem_carregamento' && !confirm(`Status atual: ${this.getStatus(status).label}. Deseja gerar a ordem mesmo assim?`)) return;
     const total = Number(e.quantidade_containers) || 0;
     if (total <= 0) {
       this.snackBar.open('Informe a quantidade de containers no embarque antes de gerar a ordem.', 'OK', { duration: 3500 });
@@ -223,6 +234,27 @@ export class EmbarquesComponent implements OnInit {
         this.load();
       },
       error: err => this.snackBar.open(err.error?.error || 'Erro ao gerar ordem.', 'OK', { duration: 4000 })
+    });
+  }
+
+  finalizarViagem(e: Embarque) {
+    if (!confirm(`Finalizar a viagem do embarque ${e.codigo_embarque}?`)) return;
+    this.api.put<Embarque>('embarques', e.id_embarque!, { ...e, status: 'viagem_finalizada', data_entrega_real: e.data_entrega_real || this.toLocalDateTime(new Date()) }).subscribe({
+      next: () => { this.snackBar.open('Viagem finalizada.', 'OK', { duration: 3000 }); this.load(); },
+      error: err => this.snackBar.open(err.error?.error || 'Erro ao finalizar viagem.', 'OK', { duration: 3500 })
+    });
+  }
+
+  marcarErro(e: Embarque) {
+    const motivo = prompt(`Motivo do erro no embarque ${e.codigo_embarque}:`, e.observacao_erro || '');
+    if (motivo === null) return;
+    if (!motivo.trim()) {
+      this.snackBar.open('Informe o motivo do erro.', 'OK', { duration: 3000 });
+      return;
+    }
+    this.api.put<Embarque>('embarques', e.id_embarque!, { ...e, status: 'erro_processo', observacao_erro: motivo.trim() }).subscribe({
+      next: () => { this.snackBar.open('Erro registrado no processo.', 'OK', { duration: 3000 }); this.load(); },
+      error: err => this.snackBar.open(err.error?.error || 'Erro ao registrar motivo.', 'OK', { duration: 3500 })
     });
   }
 
@@ -243,5 +275,44 @@ export class EmbarquesComponent implements OnInit {
   fmtBRL(v: any): string {
     const n = Number(v);
     return isNaN(n) ? '—' : 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  effectiveStatus(e: Embarque): string {
+    if (e.status === 'viagem_finalizada' || e.status === 'erro_processo') return e.status;
+    const coleta = this.startOfDay(e.data_coleta);
+    if (!coleta) return e.status || 'fazer_agendamento';
+
+    const today = this.startOfDay(new Date())!;
+    const dMinusOne = new Date(coleta);
+    dMinusOne.setDate(dMinusOne.getDate() - 1);
+
+    if (today.getTime() >= coleta.getTime()) return 'aguardando_carregamento';
+    if (today.getTime() >= dMinusOne.getTime()) {
+      return e.motorista_segue_viagem === false ? 'ordem_retirada_enviada' : 'enviar_ordem_carregamento';
+    }
+    return e.status || 'fazer_agendamento';
+  }
+
+  statusHint(e: Embarque): string {
+    const status = this.effectiveStatus(e);
+    if (status === 'agendado') return 'Pendente do envio de carregamento. Normalmente enviado D-1 da coleta.';
+    if (status === 'ordem_retirada_enviada') return 'Mantido até D-1 da coleta. Verifique se o motorista segue viagem.';
+    if (status === 'enviar_ordem_carregamento') return 'Momento de gerar/enviar a ordem de carregamento ao cliente.';
+    if (status === 'aguardando_carregamento') return 'Dia do carregamento no cliente.';
+    if (status === 'erro_processo') return e.observacao_erro || 'Processo marcado com erro.';
+    return this.getStatus(status).label;
+  }
+
+  private startOfDay(value?: string | Date): Date | null {
+    if (!value) return null;
+    const d = value instanceof Date ? new Date(value) : new Date(value);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private toLocalDateTime(date: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 }
