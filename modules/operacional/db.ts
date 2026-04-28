@@ -104,6 +104,56 @@ export async function ensureOperationalDbInitialized() {
         )
       `;
 
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS id_embarque TEXT`;
+      await sql`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'embarques' AND column_name = 'id'
+          ) THEN
+            EXECUTE 'UPDATE embarques SET id_embarque = ''EMB-LEG-'' || id::text WHERE (id_embarque IS NULL OR id_embarque = '''') AND id IS NOT NULL';
+          ELSE
+            EXECUTE 'UPDATE embarques SET id_embarque = ''EMB-LEG-'' || gen_random_uuid()::text WHERE id_embarque IS NULL OR id_embarque = ''''';
+          END IF;
+        END $$;
+      `;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS codigo_embarque TEXT`;
+      await sql`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'embarques' AND column_name = 'booking'
+          ) THEN
+            EXECUTE 'UPDATE embarques SET codigo_embarque = COALESCE(NULLIF(codigo_embarque, ''''), booking, id_embarque) WHERE codigo_embarque IS NULL OR codigo_embarque = ''''';
+          ELSE
+            EXECUTE 'UPDATE embarques SET codigo_embarque = COALESCE(NULLIF(codigo_embarque, ''''), id_embarque) WHERE codigo_embarque IS NULL OR codigo_embarque = ''''';
+          END IF;
+        END $$;
+      `;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS origem_nome TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS origem_cidade TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS origem_uf TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS origem_endereco TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS destino_nome TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS destino_cidade TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS destino_uf TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS destino_endereco TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_entrega_real TIMESTAMP`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS id_veiculo TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS id_motorista TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS descricao_carga TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS tipo_carga TEXT`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS peso_kg NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS volume_m3 NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS quantidade NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS valor_frete NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS custo_estimado NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS lucro_estimado NUMERIC`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS observacoes TEXT`;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS embarques_id_embarque_key ON embarques (id_embarque)`;
+
       await sql`
         CREATE TABLE IF NOT EXISTS containers (
           id_container TEXT PRIMARY KEY,
@@ -150,6 +200,7 @@ export async function ensureOperationalDbInitialized() {
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS ordem_gerada BOOLEAN DEFAULT FALSE`;
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_recebimento_carregamento TIMESTAMP`;
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_prevista_agendamento TIMESTAMP`;
+      await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS data_previsao_entrega TIMESTAMP`;
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS motorista_segue_viagem BOOLEAN DEFAULT TRUE`;
       await sql`ALTER TABLE embarques ADD COLUMN IF NOT EXISTS observacao_erro TEXT`;
       await sql`ALTER TABLE ctes ADD COLUMN IF NOT EXISTS id_container TEXT`;

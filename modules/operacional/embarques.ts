@@ -43,12 +43,14 @@ export async function handleEmbarques(req: AuthenticatedRequest, res: VercelResp
         v.placa,
         v.modelo AS veiculo_modelo,
         m.nome AS motorista_nome,
-        COUNT(c.id_container)::int AS containers_gerados
+        (
+          SELECT COUNT(*)::int
+          FROM containers c
+          WHERE c.id_embarque = e.id_embarque
+        ) AS containers_gerados
       FROM embarques e
       LEFT JOIN veiculos v ON v.id_veiculo = e.id_veiculo OR v.id::text = e.id_veiculo
       LEFT JOIN motoristas m ON m.id_motorista = e.id_motorista OR m.id::text = e.id_motorista
-      LEFT JOIN containers c ON c.id_embarque = e.id_embarque
-      GROUP BY e.id_embarque, v.placa, v.modelo, m.nome
       ORDER BY e.created_at DESC
     `;
     return res.status(200).json(rows);
