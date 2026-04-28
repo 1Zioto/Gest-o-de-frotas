@@ -45,7 +45,7 @@ export function withAuth(handler: (req: AuthenticatedRequest, res: VercelRespons
       return res.status(200).end();
     }
 
-    const auth = req.headers.authorization || req.headers.Authorization;
+    const auth = req.headers.authorization || req.headers['Authorization'];
     const token = Array.isArray(auth) ? auth[0]?.replace(/^Bearer\s+/i, '') : auth?.replace(/^Bearer\s+/i, '');
     const user = token ? verifyJwt(token) : null;
     if (!user) return res.status(401).json({ error: 'Não autorizado.' });
