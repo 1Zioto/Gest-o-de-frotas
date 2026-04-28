@@ -41,6 +41,7 @@ const ROUTE_MAP: Record<string, { fn: string; resource: string }> = {
 
   // /api/operacional
   embarques:      { fn: 'operacional', resource: 'embarques' },
+  cadastrosEmbarque: { fn: 'operacional', resource: 'cadastros-embarque' },
   containers:     { fn: 'operacional', resource: 'containers' },
   ctes:           { fn: 'operacional', resource: 'ctes' },
   tarefas:        { fn: 'operacional', resource: 'tarefas' },

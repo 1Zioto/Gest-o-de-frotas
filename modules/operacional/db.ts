@@ -61,6 +61,20 @@ export async function ensureOperationalDbInitialized() {
       `;
 
       await sql`
+        CREATE TABLE IF NOT EXISTS embarque_cadastros (
+          id_cadastro TEXT PRIMARY KEY,
+          tipo TEXT NOT NULL,
+          nome TEXT NOT NULL,
+          codigo TEXT,
+          uf TEXT,
+          observacoes TEXT,
+          ativo BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `;
+
+      await sql`
         CREATE TABLE IF NOT EXISTS containers (
           id_container TEXT PRIMARY KEY,
           codigo_viagem TEXT UNIQUE NOT NULL,

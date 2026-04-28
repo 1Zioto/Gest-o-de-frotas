@@ -82,6 +82,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       icon: 'inventory_2',
       items: [
         { label: 'Embarques',  icon: 'inventory_2',  route: '/embarques' },
+        { label: 'Cadastros Embarque', icon: 'fact_check', route: '/cadastros-embarque' },
         { label: 'Containers', icon: 'view_in_ar',    route: '/containers' },
         { label: 'CT-es',      icon: 'description',  route: '/ctes' },
         { label: 'Tarefas',    icon: 'task_alt',     route: '/tarefas' },
