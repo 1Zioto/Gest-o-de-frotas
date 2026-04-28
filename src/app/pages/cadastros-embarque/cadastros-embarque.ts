@@ -14,6 +14,7 @@ interface CadastroEmbarque {
   uf?: string;
   observacoes?: string;
   ativo?: boolean;
+  source?: string;
 }
 
 const TIPOS = [
@@ -74,24 +75,24 @@ const TIPOS = [
           </select>
         </div>
         <div class="field wide">
-          <label>Nome</label>
+          <label>{{ nomeLabel }}</label>
           <input class="field-input" [(ngModel)]="form.nome" placeholder="Digite o nome do cadastro" />
         </div>
         <div class="field">
-          <label>Código</label>
-          <input class="field-input" [(ngModel)]="form.codigo" placeholder="Opcional" />
+          <label>{{ codigoLabel }}</label>
+          <input class="field-input" [(ngModel)]="form.codigo" [placeholder]="codigoPlaceholder" />
         </div>
         <div class="field uf">
           <label>UF</label>
           <input class="field-input" [(ngModel)]="form.uf" maxlength="2" placeholder="UF" />
         </div>
         <div class="field wide">
-          <label>Observações</label>
-          <input class="field-input" [(ngModel)]="form.observacoes" placeholder="Opcional" />
+          <label>{{ observacoesLabel }}</label>
+          <input class="field-input" [(ngModel)]="form.observacoes" [placeholder]="observacoesPlaceholder" />
         </div>
-        <label class="active-toggle">
+        <label class="active-toggle" [class.disabled]="usesOwnTable(form)">
           <input type="checkbox" [(ngModel)]="form.ativo" />
-          Ativo
+          {{ usesOwnTable(form) ? 'Tabela própria' : 'Ativo' }}
         </label>
         <div class="form-actions">
           <button class="btn-secondary" (click)="resetForm()">Limpar</button>
@@ -132,11 +133,11 @@ const TIPOS = [
             <td class="mono">{{ c.codigo || '-' }}</td>
             <td class="mono">{{ c.uf || '-' }}</td>
             <td>
-              <span class="status-dot" [class.active]="c.ativo !== false">{{ c.ativo !== false ? 'Ativo' : 'Inativo' }}</span>
+              <span class="status-dot" [class.active]="c.ativo !== false">{{ c.source && c.source !== 'embarque_cadastros' ? 'Tabela própria' : (c.ativo !== false ? 'Ativo' : 'Inativo') }}</span>
             </td>
             <td class="actions-cell">
               <button class="icon-btn" (click)="edit(c)" title="Editar"><mat-icon>edit</mat-icon></button>
-              <button class="icon-btn" (click)="toggleAtivo(c)" title="Ativar/desativar"><mat-icon>{{ c.ativo !== false ? 'cancel' : 'check_circle' }}</mat-icon></button>
+              <button class="icon-btn" *ngIf="!usesOwnTable(c)" (click)="toggleAtivo(c)" title="Ativar/desativar"><mat-icon>{{ c.ativo !== false ? 'cancel' : 'check_circle' }}</mat-icon></button>
               <button class="icon-btn danger" (click)="remove(c)" title="Remover"><mat-icon>delete</mat-icon></button>
             </td>
           </tr>
@@ -172,7 +173,9 @@ const TIPOS = [
     .field-input { height:38px; border:1.5px solid #e2e8f0; border-radius:8px; padding:0 10px; outline:0; font-family:inherit; color:#1e293b; width:100%; box-sizing:border-box; }
     .field-input:focus { border-color:#0ea5e9; box-shadow:0 0 0 3px rgba(14,165,233,0.1); }
     .active-toggle { display:flex; align-items:center; gap:7px; height:38px; font-size:13px; font-weight:700; color:#334155; white-space:nowrap; }
+    .active-toggle.disabled { color:#64748b; }
     .active-toggle input { width:16px; height:16px; accent-color:#0369a1; }
+    .active-toggle.disabled input { display:none; }
     .form-actions { display:flex; gap:8px; }
     .btn-secondary, .btn-save { height:38px; border-radius:8px; padding:0 13px; font-weight:800; font-family:inherit; cursor:pointer; border:1.5px solid #e2e8f0; white-space:nowrap; }
     .btn-secondary { background:white; color:#475569; }
@@ -225,6 +228,38 @@ export class CadastrosEmbarqueComponent implements OnInit {
 
   constructor(private api: ApiService, private snackBar: MatSnackBar) {}
 
+  get nomeLabel(): string {
+    if (this.form.tipo === 'mercadoria') return 'Descrição';
+    if (this.form.tipo === 'destino') return 'Porto';
+    if (this.form.tipo === 'exportador' || this.form.tipo === 'importador') return 'Razão social';
+    return 'Nome';
+  }
+
+  get codigoLabel(): string {
+    if (this.form.tipo === 'cliente' || this.form.tipo === 'exportador' || this.form.tipo === 'importador') return 'CNPJ';
+    if (this.form.tipo === 'mercadoria') return 'NCM';
+    if (this.form.tipo === 'armazem_carregamento') return 'Município';
+    return 'Código';
+  }
+
+  get codigoPlaceholder(): string {
+    if (this.form.tipo === 'armazem_carregamento') return 'Município';
+    return 'Opcional';
+  }
+
+  get observacoesLabel(): string {
+    if (this.form.tipo === 'cliente') return 'Contato';
+    if (this.form.tipo === 'mercadoria') return 'Unidade';
+    if (this.form.tipo === 'destino') return 'País';
+    if (this.form.tipo === 'armazem_carregamento') return 'Endereço';
+    if (this.form.tipo === 'exportador' || this.form.tipo === 'importador') return 'Cidade';
+    return 'Observações';
+  }
+
+  get observacoesPlaceholder(): string {
+    return this.observacoesLabel === 'Observações' ? 'Opcional' : this.observacoesLabel;
+  }
+
   ngOnInit() { this.load(); }
 
   load() {
@@ -260,6 +295,10 @@ export class CadastrosEmbarqueComponent implements OnInit {
   }
 
   toggleAtivo(c: CadastroEmbarque) {
+    if (this.usesOwnTable(c)) {
+      this.snackBar.open('Este cadastro usa tabela própria e não possui campo ativo/inativo.', 'OK', { duration: 3000 });
+      return;
+    }
     this.api.put<CadastroEmbarque>('cadastrosEmbarque', c.id_cadastro!, { ...c, ativo: c.ativo === false }).subscribe({
       next: () => this.load(),
       error: err => this.snackBar.open(err.error?.error || 'Erro ao alterar status.', 'OK', { duration: 3000 })
@@ -276,6 +315,10 @@ export class CadastrosEmbarqueComponent implements OnInit {
 
   resetForm() {
     this.form = this.emptyForm();
+  }
+
+  usesOwnTable(c: CadastroEmbarque): boolean {
+    return !!c.source && c.source !== 'embarque_cadastros';
   }
 
   labelFor(tipo: string): string {
