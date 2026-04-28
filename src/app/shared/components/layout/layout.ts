@@ -62,6 +62,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
         { label: 'Multas', icon: 'gavel', route: '/multas' },
         { label: 'Despesas', icon: 'receipt_long', route: '/despesas' },
         { label: 'Registros', icon: 'history', route: '/registros' },
+        { label: 'Tarefas', icon: 'task_alt', route: '/tarefas' },
+        { label: 'Rastreio', icon: 'location_on', route: '/rastreio' },
       ]
     },
     {
@@ -78,15 +80,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
       ]
     },
     {
-      label: 'Operacional',
+      label: 'Exportação - Vipe',
       icon: 'inventory_2',
       items: [
         { label: 'Embarques',  icon: 'inventory_2',  route: '/embarques' },
         { label: 'Cadastros Embarque', icon: 'fact_check', route: '/cadastros-embarque' },
         { label: 'Containers', icon: 'view_in_ar',    route: '/containers' },
         { label: 'CT-es',      icon: 'description',  route: '/ctes' },
-        { label: 'Tarefas',    icon: 'task_alt',     route: '/tarefas' },
-        { label: 'Rastreio',   icon: 'location_on',  route: '/rastreio' },
       ]
     },
     {
