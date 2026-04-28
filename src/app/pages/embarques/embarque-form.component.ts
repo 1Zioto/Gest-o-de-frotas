@@ -7,7 +7,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/services/api.service';
-import { Veiculo, Motorista } from '../../core/models';
 
 export interface Embarque {
   id_embarque?: string;
@@ -25,6 +24,25 @@ export interface Embarque {
   ordem_gerada?: boolean; containers_gerados?: number;
   placa?: string; veiculo_modelo?: string; motorista_nome?: string;
   created_at?: string;
+}
+
+interface EmbarqueVeiculo {
+  id?: string;
+  id_veiculo?: string;
+  placa: string;
+  modelo?: string;
+  marca?: string;
+  ativo?: boolean;
+}
+
+interface EmbarqueMotorista {
+  id?: string;
+  id_motorista?: string;
+  nome: string;
+  cnh?: string;
+  cel?: string;
+  email?: string;
+  ativo?: boolean;
 }
 
 @Component({
@@ -72,8 +90,8 @@ export interface Embarque {
             <label>Veículo</label>
             <select class="field-input" [(ngModel)]="item.id_veiculo" name="id_veiculo">
               <option value="">Nenhum</option>
-              @for (v of veiculos(); track v.id_veiculo) {
-                <option [value]="v.id_veiculo">{{ v.placa }}{{ v.modelo ? ' — ' + v.modelo : '' }}</option>
+              @for (v of veiculos(); track vehicleValue(v)) {
+                <option [value]="vehicleValue(v)">{{ v.placa }}{{ v.modelo ? ' — ' + v.modelo : '' }}</option>
               }
             </select>
           </div>
@@ -81,8 +99,8 @@ export interface Embarque {
             <label>Motorista</label>
             <select class="field-input" [(ngModel)]="item.id_motorista" name="id_motorista">
               <option value="">Nenhum</option>
-              @for (m of motoristas(); track m.id_motorista) {
-                <option [value]="asAny(m).id || m.id_motorista">{{ m.nome }}</option>
+              @for (m of motoristas(); track motoristaValue(m)) {
+                <option [value]="motoristaValue(m)">{{ m.nome }}</option>
               }
             </select>
           </div>
@@ -263,11 +281,9 @@ export interface Embarque {
 })
 export class EmbarqueFormComponent implements OnInit {
   item: Partial<Embarque> = { status: 'fazer_agendamento', motorista_segue_viagem: true };
-  veiculos  = signal<Veiculo[]>([]);
-  motoristas = signal<Motorista[]>([]);
+  veiculos  = signal<EmbarqueVeiculo[]>([]);
+  motoristas = signal<EmbarqueMotorista[]>([]);
   saving = signal(false);
-
-  asAny(obj: any) { return obj; }
 
   constructor(
     private dialogRef: MatDialogRef<EmbarqueFormComponent>,
@@ -279,8 +295,16 @@ export class EmbarqueFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.get<Veiculo[]>('veiculos').subscribe(v => this.veiculos.set(v));
-    this.api.get<Motorista[]>('motoristas').subscribe(m => this.motoristas.set(m));
+    this.api.get<EmbarqueVeiculo[]>('veiculosEmbarque').subscribe(v => this.veiculos.set(v));
+    this.api.get<EmbarqueMotorista[]>('motoristasEmbarque').subscribe(m => this.motoristas.set(m));
+  }
+
+  vehicleValue(vehicle: EmbarqueVeiculo): string {
+    return vehicle.id_veiculo || vehicle.id || '';
+  }
+
+  motoristaValue(motorista: EmbarqueMotorista): string {
+    return motorista.id_motorista || motorista.id || '';
   }
 
   save() {

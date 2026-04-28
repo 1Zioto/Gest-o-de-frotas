@@ -45,6 +45,8 @@ const ROUTE_MAP: Record<string, { fn: string; resource: string }> = {
   containers:     { fn: 'operacional', resource: 'containers' },
   ctes:           { fn: 'operacional', resource: 'ctes' },
   tarefas:        { fn: 'operacional', resource: 'tarefas' },
+  veiculosEmbarque: { fn: 'operacional', resource: 'veiculos-embarque' },
+  motoristasEmbarque: { fn: 'operacional', resource: 'motoristas-embarque' },
 };
 
 @Injectable({ providedIn: 'root' })

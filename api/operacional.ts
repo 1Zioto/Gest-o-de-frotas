@@ -7,6 +7,8 @@
  *   /api/operacional?resource=containers
  *   /api/operacional?resource=ctes
  *   /api/operacional?resource=tarefas
+ *   /api/operacional?resource=veiculos-embarque
+ *   /api/operacional?resource=motoristas-embarque
  */
 import type { VercelResponse } from '@vercel/node';
 import { withAuth, AuthenticatedRequest } from '../modules/shared/middleware.js';
@@ -15,8 +17,9 @@ import { handleCadastrosEmbarque } from '../modules/operacional/cadastros-embarq
 import { handleContainers } from '../modules/operacional/containers.js';
 import { handleCtes }      from '../modules/operacional/ctes.js';
 import { handleTarefas }   from '../modules/operacional/tarefas.js';
+import { handleMotoristasEmbarque, handleVeiculosEmbarque } from '../modules/operacional/apoio-frota.js';
 
-const RESOURCES = ['embarques', 'cadastros-embarque', 'containers', 'ctes', 'tarefas'] as const;
+const RESOURCES = ['embarques', 'cadastros-embarque', 'containers', 'ctes', 'tarefas', 'veiculos-embarque', 'motoristas-embarque'] as const;
 type OperacionalResource = (typeof RESOURCES)[number];
 
 export default withAuth(async (req: AuthenticatedRequest, res: VercelResponse) => {
@@ -34,5 +37,7 @@ export default withAuth(async (req: AuthenticatedRequest, res: VercelResponse) =
     case 'containers': return handleContainers(req, res);
     case 'ctes':      return handleCtes(req, res);
     case 'tarefas':   return handleTarefas(req, res);
+    case 'veiculos-embarque': return handleVeiculosEmbarque(req, res);
+    case 'motoristas-embarque': return handleMotoristasEmbarque(req, res);
   }
 });
