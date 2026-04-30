@@ -10,6 +10,11 @@ function queryText(req: AuthenticatedRequest): string {
   return String(req.query['q'] || '').trim();
 }
 
+function balanceteTipo(req: AuthenticatedRequest): string {
+  const tipo = String(req.query['tipo'] || '').trim();
+  return ['mercado_interno', 'exportacao'].includes(tipo) ? tipo : '';
+}
+
 function nullable(value: unknown) {
   return value === undefined || value === '' ? null : value;
 }
@@ -25,67 +30,66 @@ export async function handleBalancete(req: AuthenticatedRequest, res: VercelResp
 
   if (req.method === 'GET') {
     const q = queryText(req);
-    const rows = q
-      ? await sql`
-          SELECT
-            id,
-            source_row_number,
-            cte,
-            data,
-            cliente,
-            remetente,
-            destinatario,
-            motorista,
-            placa_cavalo,
-            frete_emp,
-            valor_mercadoria,
-            lucro,
-            vgm,
-            vipe,
-            despesa,
-            check_status,
-            nome_tomador,
-            cidade_remetente,
-            cidade_destinatario
-          FROM balancete
-          WHERE
-            cte ILIKE ${`%${q}%`}
-            OR cliente ILIKE ${`%${q}%`}
-            OR motorista ILIKE ${`%${q}%`}
-            OR placa_cavalo ILIKE ${`%${q}%`}
-            OR vgm ILIKE ${`%${q}%`}
-          ORDER BY data DESC NULLS LAST, id DESC
-          LIMIT 500
-        `
-      : await sql`
-          SELECT
-            id,
-            source_row_number,
-            cte,
-            data,
-            cliente,
-            remetente,
-            destinatario,
-            motorista,
-            placa_cavalo,
-            frete_emp,
-            valor_mercadoria,
-            lucro,
-            vgm,
-            vipe,
-            despesa,
-            check_status,
-            nome_tomador,
-            cidade_remetente,
-            cidade_destinatario
-          FROM balancete
-          ORDER BY data DESC NULLS LAST, id DESC
-          LIMIT 500
-        `;
+    const tipo = balanceteTipo(req);
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    if (q) {
+      params.push(`%${q}%`);
+      conditions.push(`(
+        cte ILIKE $${params.length}
+        OR cliente ILIKE $${params.length}
+        OR motorista ILIKE $${params.length}
+        OR placa_cavalo ILIKE $${params.length}
+        OR vgm ILIKE $${params.length}
+        OR emissor ILIKE $${params.length}
+      )`);
+    }
+
+    if (tipo === 'exportacao') {
+      conditions.push(`LOWER(COALESCE(emissor, '')) IN ('2456 - ivan c', '2451 - sthefany')`);
+    } else if (tipo === 'mercado_interno') {
+      conditions.push(`LOWER(COALESCE(emissor, '')) NOT IN ('2456 - ivan c', '2451 - sthefany')`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const rows = await sql.query(`
+      SELECT
+        id,
+        source_row_number,
+        emissor,
+        cte,
+        data,
+        cliente,
+        remetente,
+        destinatario,
+        motorista,
+        placa_cavalo,
+        frete_emp,
+        valor_mercadoria,
+        lucro,
+        vgm,
+        vipe,
+        despesa,
+        check_status,
+        nome_tomador,
+        cidade_remetente,
+        cidade_destinatario,
+        CASE
+          WHEN LOWER(COALESCE(emissor, '')) IN ('2456 - ivan c', '2451 - sthefany') THEN 'exportacao'
+          ELSE 'mercado_interno'
+        END AS tipo_operacao
+      FROM balancete
+      ${where}
+      ORDER BY data DESC NULLS LAST, id DESC
+      LIMIT 500
+    `, params);
 
     const stats = await sql`
       SELECT
         COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE LOWER(COALESCE(emissor, '')) IN ('2456 - ivan c', '2451 - sthefany'))::int AS exportacao,
+        COUNT(*) FILTER (WHERE LOWER(COALESCE(emissor, '')) NOT IN ('2456 - ivan c', '2451 - sthefany'))::int AS mercado_interno,
         COUNT(*) FILTER (WHERE LOWER(COALESCE(check_status, '')) = 'ok' OR LOWER(COALESCE(vipe, '')) = 'sim')::int AS finalizados,
         COUNT(*) FILTER (WHERE NOT (LOWER(COALESCE(check_status, '')) = 'ok' OR LOWER(COALESCE(vipe, '')) = 'sim'))::int AS pendentes,
         COALESCE(SUM(frete_emp), 0)::float AS total_frete
@@ -101,11 +105,11 @@ export async function handleBalancete(req: AuthenticatedRequest, res: VercelResp
     const sourceRows = await sql`SELECT COALESCE(MAX(source_row_number), 1)::int + 1 AS next FROM balancete`;
     const rows = await sql`
       INSERT INTO balancete (
-        source_row_number, cte, data, cliente, remetente, destinatario, motorista,
+        source_row_number, emissor, cte, data, cliente, remetente, destinatario, motorista,
         placa_cavalo, frete_emp, valor_mercadoria, lucro, vgm, vipe, despesa,
         check_status, nome_tomador, cidade_remetente, cidade_destinatario
       ) VALUES (
-        ${Number(sourceRows[0]['next'])}, ${body['cte']}, ${nullable(body['data'])}, ${body['cliente']},
+        ${Number(sourceRows[0]['next'])}, ${nullable(body['emissor'])}, ${body['cte']}, ${nullable(body['data'])}, ${body['cliente']},
         ${nullable(body['remetente'])}, ${nullable(body['destinatario'])}, ${nullable(body['motorista'])},
         ${nullable(body['placa_cavalo'])}, ${toNumber(body['frete_emp'])}, ${toNumber(body['valor_mercadoria'])},
         ${toNumber(body['lucro'])}, ${nullable(body['vgm'])}, ${nullable(body['vipe'])}, ${nullable(body['despesa'])},
@@ -125,6 +129,7 @@ export async function handleBalancete(req: AuthenticatedRequest, res: VercelResp
 
     const rows = await sql`
       UPDATE balancete SET
+        emissor = ${nullable(body['emissor'])},
         cte = ${body['cte']},
         data = ${nullable(body['data'])},
         cliente = ${body['cliente']},
