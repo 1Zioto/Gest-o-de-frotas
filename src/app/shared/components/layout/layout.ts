@@ -62,6 +62,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
         { label: 'Multas', icon: 'gavel', route: '/multas' },
         { label: 'Despesas', icon: 'receipt_long', route: '/despesas' },
         { label: 'Registros', icon: 'history', route: '/registros' },
+        { label: 'Balancete', icon: 'balance', route: '/balancete' },
+        { label: 'Sofit', icon: 'route', route: '/sofit' },
         { label: 'Tarefas', icon: 'task_alt', route: '/tarefas' },
         { label: 'Rastreio', icon: 'location_on', route: '/rastreio' },
       ]

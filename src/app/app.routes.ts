@@ -23,6 +23,8 @@ export const routes: Routes = [
       { path: 'transportes', loadComponent: () => import('./pages/transportes/transportes').then(m => m.TransportesComponent) },
       { path: 'despesas', loadComponent: () => import('./pages/despesas/despesas').then(m => m.DespesasComponent) },
       { path: 'registros', loadComponent: () => import('./pages/registros/registros').then(m => m.RegistrosComponent) },
+      { path: 'balancete', loadComponent: () => import('./pages/balancete/balancete').then(m => m.BalanceteComponent) },
+      { path: 'sofit', loadComponent: () => import('./pages/sofit/sofit').then(m => m.SofitComponent) },
       { path: 'valores-combustivel', loadComponent: () => import('./pages/valores/valores').then(m => m.ValoresComponent) },
       { path: 'embarques', loadComponent: () => import('./pages/embarques/embarques').then(m => m.EmbarquesComponent) },
       { path: 'cadastros-embarque', loadComponent: () => import('./pages/cadastros-embarque/cadastros-embarque').then(m => m.CadastrosEmbarqueComponent) },
