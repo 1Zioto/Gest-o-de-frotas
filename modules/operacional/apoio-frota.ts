@@ -14,17 +14,14 @@ export async function handleVeiculosEmbarque(req: AuthenticatedRequest, res: Ver
   const rows = await sql`
     SELECT
       id::text AS id,
-      id_veiculo,
+      COALESCE(id_veiculo, id::text) AS id_veiculo,
       placa,
       modelo,
       marca,
       ano,
-      tipo,
-      status,
       COALESCE(ativo, TRUE) AS ativo
     FROM veiculos
     WHERE COALESCE(ativo, TRUE) = TRUE
-      AND LOWER(COALESCE(status, 'Ativo')) <> 'inativo'
     ORDER BY placa ASC, modelo ASC
   `;
 
