@@ -85,7 +85,7 @@ export async function handleBalancete(req: AuthenticatedRequest, res: VercelResp
       LIMIT 500
     `, params);
 
-    const stats = await sql`
+    const stats = await sql.query(`
       SELECT
         COUNT(*)::int AS total,
         COUNT(*) FILTER (WHERE LOWER(COALESCE(emissor, '')) IN ('2456 - ivan c', '2451 - sthefany'))::int AS exportacao,
@@ -94,7 +94,8 @@ export async function handleBalancete(req: AuthenticatedRequest, res: VercelResp
         COUNT(*) FILTER (WHERE NOT (LOWER(COALESCE(check_status, '')) = 'ok' OR LOWER(COALESCE(vipe, '')) = 'sim'))::int AS pendentes,
         COALESCE(SUM(frete_emp), 0)::float AS total_frete
       FROM balancete
-    `;
+      ${where}
+    `, params);
 
     return res.status(200).json({ rows, stats: stats[0] });
   }
